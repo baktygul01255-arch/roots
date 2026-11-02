@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Корень n-й степени</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,500;0,700;1,500&family=PT+Sans:wght@400;700&family=PT+Serif:ital@0;1&family=PT+Mono&display=swap">
+<style>
+[hidden]{display:none!important}
+/* Layout: школьная тетрадь — красная линия полей, вкладки, слева текст учебника, справа рисунок/модель на клетчатой бумаге */
+:root{
+  --paper:#f6f7fb; --surface:#ffffff; --ink:#1c2746; --muted:#5b6582; --line:#d8ddea;
+  --grid:rgba(60,95,170,.09); --accent:#2d4db3; --accent-soft:#e4e9f9; --margin:#d1475a;
+  --ok:#1d8656; --ok-soft:#e1f3ea; --bad:#c13838; --bad-soft:#fbe6e6;
+  --c1:#2d4db3; --c2:#c2410c; --c3:#7c3aed; --c4:#15803d;
+  --f-display:"Alegreya",Georgia,"Times New Roman",serif;
+  --f-body:"PT Sans","Segoe UI",Arial,sans-serif;
+  --f-math:"PT Serif",Georgia,serif;
+  --f-mono:"PT Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#11162a; --surface:#171e36; --ink:#e5e9f4; --muted:#9aa3bf; --line:#2a3352;
+  --grid:rgba(140,170,255,.07); --accent:#93a9ff; --accent-soft:#222c4c; --margin:#ff7c8b;
+  --ok:#4fc68f; --ok-soft:#173528; --bad:#ff7b7b; --bad-soft:#3a1e24;
+  --c1:#6c84e0; --c2:#d9733c; --c3:#9470dc; --c4:#2fa463; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11162a; --surface:#171e36; --ink:#e5e9f4; --muted:#9aa3bf; --line:#2a3352;
+  --grid:rgba(140,170,255,.07); --accent:#93a9ff; --accent-soft:#222c4c; --margin:#ff7c8b;
+  --ok:#4fc68f; --ok-soft:#173528; --bad:#ff7b7b; --bad-soft:#3a1e24;
+  --c1:#6c84e0; --c2:#d9733c; --c3:#9470dc; --c4:#2fa463; color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+*{box-sizing:border-box}
+html{font-size:137.5%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:1rem;line-height:1.55;transition:background .2s,color .2s}
+.wrap{max-width:min(78rem,100%);margin:0 auto;padding-inline:16px;padding-block:0 48px}
+header.top{position:relative;padding-block:28px 20px;padding-left:22px;display:flex;flex-wrap:wrap;gap:16px 24px;justify-content:space-between;align-items:flex-start}
+header.top::before{content:"";position:absolute;left:0;top:24px;bottom:16px;width:2px;background:var(--margin)}
+.htext{flex:1 1 520px;min-width:0}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sw{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:3px;gap:2px}
+.sw button{font:inherit;font-size:.85rem;font-weight:700;letter-spacing:.04em;border:0;background:none;color:var(--muted);border-radius:999px;padding:5px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.sw button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.sw svg{width:1em;height:1em;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,4.6vw,3rem);line-height:1.08;margin:.25em 0 .2em;text-wrap:balance}
+h1 em{font-style:italic;font-weight:500;color:var(--accent)}
+.lead{max-width:64ch;color:var(--muted);margin:0}
+h2{font-family:var(--f-display);font-size:1.5rem;margin:0;text-wrap:balance}
+h3{font-family:var(--f-display);font-size:1.2rem;margin:0}
+p{margin:0}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-bottom:22px}
+nav.tabs button{font:inherit;font-weight:700;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:12px 14px 10px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs button:hover{color:var(--ink)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.m{font-family:var(--f-math);white-space:nowrap}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.82em;line-height:1.12;margin:0 .08em}
+.fr>span:first-child{border-bottom:1px solid currentColor;padding:0 .18em}
+.fr>span:last-child{padding:0 .18em}
+.paper-grid{background-color:var(--surface);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;border:1px solid var(--line);border-radius:10px}
+svg.plot{display:block;width:100%;height:auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.duo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.duo.wideR{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}
+@media (max-width:980px){.duo,.duo.wideR{grid-template-columns:1fr}}
+.stack{display:flex;flex-direction:column;gap:18px}
+.defn{border:1.5px solid var(--ink);border-radius:14px;padding:10px 14px;line-height:1.6}
+.fblock{display:block;text-align:center;font-family:var(--f-math);font-size:1.18em;margin-top:6px}
+.note{background:var(--accent-soft);border-radius:8px;padding:10px 14px;line-height:1.6}
+.ex{border-left:3px solid var(--margin);padding-left:12px;line-height:1.7}
+.ex .lbl{display:block;margin-bottom:2px}
+ul.clean{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;line-height:1.55}
+.lbl{font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--f-math);font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+thead th{color:var(--muted);font-weight:400}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.chip{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 13px;cursor:pointer;line-height:1.4}
+.seg button[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip{font-family:var(--f-math);font-size:.95rem}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.btn{font:inherit;font-weight:700;background:var(--accent);color:var(--paper);border:0;border-radius:8px;padding:8px 16px;cursor:pointer}
+.btn.ghost{background:none;color:var(--accent);border:1.5px solid var(--accent)}
+.btn.sm{padding:5px 12px;font-size:.9rem}
+select,input.num{font:inherit;font-family:var(--f-math);padding:4px 8px;border:1.5px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);max-width:100%}
+input.num{width:6em}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.sl{display:grid;grid-template-columns:minmax(4em,auto) 1fr 5.5em;gap:10px;align-items:center}
+.sl .vl{font-family:var(--f-math);text-align:right}
+.big{font-family:var(--f-math);font-size:1.35rem;line-height:1.7}
+.eq{font-family:var(--f-math);font-size:1.6rem;line-height:1.6}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.steps li{display:grid;grid-template-columns:2em 1fr;gap:10px;align-items:start;counter-increment:st}
+.steps li::before{content:counter(st);font-family:var(--f-mono);font-size:.85rem;color:var(--paper);background:var(--accent);border-radius:50%;width:1.7em;height:1.7em;display:grid;place-items:center;margin-top:.2em}
+.steps .why{color:var(--muted);font-size:.92rem;display:block}
+.steps .mx{font-family:var(--f-math);font-size:1.2rem;line-height:1.9;overflow-x:auto;display:block}
+.sMode{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.9rem;margin:6px 0 12px;cursor:pointer}
+.sMode input{width:1.2em;height:1.2em;accent-color:var(--accent)}
+.work{border:2px dashed var(--line);border-radius:12px;min-height:220px;padding:12px 16px;color:var(--muted);font-size:.95rem;margin-bottom:14px}
+#sCheck .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 6px}
+#sCheck .fb{font-weight:700;margin:6px 0 12px}
+#sCheck .fb.ok{color:var(--ok)}#sCheck .fb.bad{color:var(--bad)}
+#sCtl .btn[disabled]{opacity:.4;cursor:default}
+@media (max-width:700px){#sCheck .opts{grid-template-columns:1fr}}
+.answer{border:2px solid var(--ok);background:var(--ok-soft);border-radius:10px;padding:10px 14px;font-family:var(--f-math);font-size:1.3rem;line-height:1.8}
+.answer.none{border-color:var(--bad);background:var(--bad-soft)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:50%;vertical-align:-2px;margin-right:6px}
+.qwrap{max-width:880px}
+.stat{font-family:var(--f-mono);font-size:.9rem;color:var(--muted)}
+.stat b{color:var(--ink);font-weight:400}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.qcat{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.qtext{font-size:1.2rem;line-height:1.6}
+.qtext .m{font-size:1.12em}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:10px}
+.opt{font:inherit;font-family:var(--f-math);font-size:1.08rem;text-align:left;padding:12px 14px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);cursor:pointer;display:flex;gap:10px;align-items:center;min-height:2.6em;line-height:1.6}
+.opt .k{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;flex:none}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.expl{border-radius:8px;padding:12px 14px;font-size:1rem;line-height:1.8}
+.expl.ok{background:var(--ok-soft)} .expl.no{background:var(--bad-soft)}
+.expl b{display:block;margin-bottom:2px}
+.progress{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.progress > i{display:block;height:100%;background:var(--accent);transition:width .3s}
+.score{font-family:var(--f-display);font-size:3rem;line-height:1}
+.review{display:flex;flex-direction:column;gap:12px}
+.review > div{border-left:3px solid var(--bad);padding:4px 0 4px 12px;line-height:1.7;display:flex;flex-direction:column;gap:6px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<style>
+.opt .m{white-space:normal}
+#trBox .opts,#testBox .opts{grid-template-columns:1fr}
+#sWork{min-height:max(560px,62vh);border:2px dashed var(--line);font-size:.85rem;margin-top:4px}
+.vwork{min-height:320px;font-size:.85rem;margin:0}
+.mtag{display:inline-block;border-radius:999px;padding:3px 12px;font-weight:700;font-size:.85rem;background:var(--accent-soft);color:var(--accent)}
+.cmp td,.cmp th{white-space:normal;text-align:left;vertical-align:top;line-height:1.5}
+.cmp td{font-family:var(--f-math)}
+.tcard{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:22px;align-items:start}
+@media (max-width:980px){.tcard{grid-template-columns:1fr}}
+.sticky{position:sticky;top:64px}
+@media (max-width:980px){.sticky{position:static}}
+.circ{max-width:620px;width:100%;margin-inline:auto}
+.cap,.lbl{text-transform:none!important;letter-spacing:.02em!important}
+.pg button{font:inherit;font-family:var(--f-math);border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer;line-height:1.4}
+.pg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+#sCheck .opts{grid-template-columns:1fr!important}
+.task .opts{grid-template-columns:1fr 1fr}
+@media (max-width:800px){.task .opts{grid-template-columns:1fr}}
+.cap{font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:4px}
+.pg{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
+.pgl{font-size:.8rem;font-weight:700;color:var(--muted);min-width:6.5em}
+#sPre button{font-family:var(--f-math)}
+#sPre{display:block}
+.fbt{font-weight:700;border-radius:999px;padding:2px 12px;font-size:.85rem}
+.fbt.ok{background:var(--ok-soft);color:var(--ok)}.fbt.bad{background:var(--bad-soft);color:var(--bad)}
+details.qa{border-top:1px solid var(--line);padding:10px 0}
+details.qa summary{cursor:pointer;font-weight:700}
+details.qa p{margin-top:8px;color:var(--muted)}
+.task .qtext{font-size:1.25rem}
+.gen8{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 40px;max-width:1240px;margin-inline:auto;width:100%}
+@media (max-width:700px){.gen8{grid-template-columns:1fr}}
+.g8{margin:0;display:flex;flex-direction:column;gap:6px}
+.g8t{font-family:var(--f-math);font-weight:700;font-size:1.25rem;text-align:center}
+.g8f{border:1.5px solid var(--ink);border-radius:8px;padding:6px 10px;text-align:center;font-family:var(--f-math);font-size:.95rem;line-height:1.7}
+.mctl{display:flex;flex-direction:column;gap:10px}
+h1{overflow-wrap:break-word;hyphens:auto}
+</style>
+<style>
+.rt{white-space:nowrap;font-family:var(--f-math)}
+.ov{border-top:1.6px solid currentColor;padding:0 .12em;margin-left:.02em;display:inline-block;line-height:1.15}
+.ri{font-size:.62em;margin-right:-.42em;vertical-align:.95em;position:relative;left:.05em}
+.props td{font-family:var(--f-math);font-size:1.05rem;line-height:2}
+.pc{font-family:var(--f-body);font-size:.8rem;color:var(--muted);line-height:1.3}
+.muted{color:var(--muted)}
+.know{background:var(--accent-soft);border-radius:10px;padding:10px 14px;line-height:1.6}
+.know .kt,.qbox .kt{display:inline-block;font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-right:8px}
+.know .ip{margin:6px 0 0;padding-left:1.4em;font-family:var(--f-math)}
+.qbox{border:1.5px dashed var(--accent);border-radius:10px;padding:10px 14px}.qbox ol{margin:6px 0 0;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.sol{margin-top:6px;font-family:var(--f-math);line-height:2}
+details.qa{border-top:1px solid var(--line);padding:8px 0}details.qa summary{cursor:pointer;font-weight:700;color:var(--accent)}details.qa p{margin-top:6px;font-family:var(--f-math);line-height:2}
+.bk{display:inline-block;font-family:var(--f-body);font-size:.8rem;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:2px 10px;vertical-align:middle;margin-right:6px}
+
+.sticky{position:sticky;top:64px}@media (max-width:980px){.sticky{position:static}}
+.tcard>*{min-width:0}
+.mq{font-family:var(--f-math);font-size:1.5rem}
+.qtext .rt,.eq .rt{font-size:1.05em}
+.eq{font-size:1.7rem}
+</style>
+<div class="wrap">
+  <header class="top">
+    <div class="htext">
+      <div class="eyebrow" data-i="eyebrow"></div>
+      <h1 data-i="h1"></h1>
+      <p class="lead" data-i="lead"></p>
+    </div>
+    <div class="ctrls">
+      <div class="sw" id="langSw" role="group" aria-label="Тіл / Язык"><button data-lang="ru">РУС</button><button data-lang="kz">ҚАЗ</button></div>
+      <div class="sw" id="sizeSw" role="group" aria-label="Размер шрифта"><button data-sz="16">A</button><button data-sz="22">A+</button><button data-sz="28">A++</button></div>
+      <div class="sw" id="themeSw" role="group" aria-label="Тема">
+        <button data-th="light"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span data-i="light"></span></button>
+        <button data-th="dark"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span data-i="dark"></span></button>
+      </div>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="t-theory" data-tab="theory" data-i="tTheory"></button>
+    <button role="tab" id="t-model" data-tab="model" data-i="tModel"></button>
+    <button role="tab" id="t-solve" data-tab="solve" data-i="tSolve"></button>
+    <button role="tab" id="t-train" data-tab="train" data-i="tTrain"></button>
+    <button role="tab" id="t-test" data-tab="test" data-i="tTest"></button>
+  </nav>
+  <main>
+  <div id="p-theory" class="pane"><div class="stack" id="theoryBox"></div></div>
+  <div id="p-model" class="pane" hidden><div class="stack">
+    <div class="card"><span class="lbl" data-i="m1L"></span><div class="duo"><div class="stack">
+      <div class="seg" id="m1n"></div>
+      <div class="sl"><span class="m">a</span><input type="range" id="m1a" min="-30" max="100" step="0.5"><span class="vl" id="m1av"></span></div>
+      <div class="seg"><button class="chip" data-m1a="-27">−27</button><button class="chip" data-m1a="-8">−8</button><button class="chip" data-m1a="0">0</button><button class="chip" data-m1a="1">1</button><button class="chip" data-m1a="16">16</button><button class="chip" data-m1a="32">32</button><button class="chip" data-m1a="64">64</button><button class="chip" data-m1a="81">81</button></div>
+      <div class="mq" id="m1Eq"></div><div class="answer" id="m1Msg" style="font-size:1.1rem"></div></div>
+      <div class="paper-grid"><svg id="m1G" class="plot" role="img" aria-label="x^n=a"></svg></div></div></div>
+    <div class="card"><span class="lbl" data-i="m2L"></span><div class="duo"><div class="stack">
+      <div class="seg" id="m2n"></div><label class="sMode"><input type="checkbox" id="m2s"> <span data-i="m2sL"></span></label><p id="m2Msg"></p></div>
+      <div class="paper-grid"><svg id="m2G" class="plot" role="img" aria-label="roots"></svg></div></div></div>
+    <div class="card"><span class="lbl" data-i="m3L"></span><div class="duo"><div class="stack">
+      <div class="sl"><span class="m">a</span><input type="range" id="m3b" min="0.1" max="9" step="0.1"><span class="vl" id="m3bv"></span></div>
+      <div class="sl"><span class="m">m</span><input type="range" id="m3m" min="-6" max="6" step="1"><span class="vl" id="m3mv"></span></div>
+      <div class="sl"><span class="m">n</span><input type="range" id="m3d" min="1" max="6" step="1"><span class="vl" id="m3dv"></span></div>
+      <div class="mq" id="m3Eq"></div><p id="m3Msg"></p></div>
+      <div class="paper-grid"><svg id="m3G" class="plot" role="img" aria-label="a^x"></svg></div></div></div>
+  </div></div>
+  <div id="p-solve" class="pane" hidden>
+    <div class="duo wideR">
+      <div class="stack"><div class="card"><span class="lbl" data-i="genL"></span><div class="seg" id="sGen"></div><p style="color:var(--muted);font-size:.9rem" data-i="genHint"></p></div></div>
+      <div class="stack"><div class="card"><div class="eq" id="sEq"></div>
+        <label class="sMode"><input type="checkbox" class="teach"> <span data-i="sAllL"></span></label>
+        <div id="sWork" class="work paper-grid"></div><div id="sCheck"></div>
+        <ol class="steps" id="sSteps"></ol><div id="sAns"></div><div class="row" id="sCtl" style="margin-top:14px"></div></div></div>
+    </div>
+  </div>
+  <div id="p-train" class="pane" hidden>
+    <div class="qwrap">
+      <div class="row" style="margin-bottom:14px"><div class="seg" id="trCat"></div></div>
+      <div class="row" style="margin-bottom:14px">
+        <span class="stat"><span data-i="sDone"></span>: <b id="sDone">0</b></span>
+        <span class="stat"><span data-i="sOk"></span>: <b id="sOk">0</b></span>
+        <span class="stat"><span data-i="sStreak"></span>: <b id="sStreak">0</b></span>
+        <span class="stat"><span data-i="sBest"></span>: <b id="sBest">0</b></span>
+      </div>
+      <div id="trBox"></div>
+    </div>
+  </div>
+  <div id="p-test" class="pane" hidden><div class="qwrap" id="testBox"></div></div>
+  </main>
+</div>
+
+<script>
+
+/* ================= база ================= */
+let LANG='ru';
+try{const s=localStorage.getItem('rtn-lang');if(s==='kz'||s==='ru')LANG=s;}catch(e){}
+const L=(ru,kz)=>LANG==='kz'?kz:ru;
+const $=s=>document.querySelector(s);
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+let rnd=Math.random;
+const ri=(a,b)=>a+Math.floor(rnd()*(b-a+1));
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const newSeed=()=>Math.floor(Math.random()*2**31);
+function withSeed(seed,fn){const p=rnd;rnd=mulberry(seed);try{return fn();}finally{rnd=p;}}
+const gcd=(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a||1;};
+const lcm=(a,b)=>a/gcd(a,b)*b;
+const Q=(n,d=1)=>{if(d<0){n=-n;d=-d;}const g=gcd(n,d);return[n/g,d/g];};
+const frac=(n,d)=>`<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const M_=s=>`<span class="m">${s}</span>`;
+const strip=h=>h.replace(/<[^>]+>/g,'|');
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function txt(parent,s,x,y,a){const e=el('text',Object.assign({x,y,'font-size':19,fill:'var(--ink)','font-family':'PT Serif, Georgia, serif','paint-order':'stroke',stroke:'var(--surface)','stroke-width':5,'stroke-linejoin':'round'},a||{}),parent);e.textContent=s;return e;}
+function trimN(x,d){let s=x.toFixed(d);if(s.includes('.'))s=s.replace(/0+$/,'').replace(/\.$/,'');return s;}
+function fmt(x,sig=4){if(!isFinite(x))return'—';if(Math.abs(x)<1e-12)return'0';const a=Math.abs(x);const d=Math.max(0,sig-1-Math.floor(Math.log10(a)));return trimN(x,Math.min(d,8)).replace('.',',').replace('-','−');}
+const neg=s=>String(s).replace(/^-/,'−');
+/* ---------- запись корней и степеней ---------- */
+const ov=s=>`<span class="ov">${s}</span>`;
+function rad(n,x){return n===2?`<span class="rt">√${ov(x)}</span>`:`<span class="rt"><sup class="ri">${n}</sup>√${ov(x)}</span>`;}
+const pw=(b,e)=>`${b}<sup>${e}</sup>`;
+const rH=r=>{const[p,q]=Q(r[0],r[1]);return q===1?neg(p):(p<0?'−':'')+frac(Math.abs(p),q);};
+const rS=r=>{const[p,q]=Q(r[0],r[1]);return q===1?neg(p):neg(p)+'/'+q;}; // для показателя
+const rV=r=>r[0]/r[1];
+function decH(x){return fmt(x,6);}
+// упрощение ⁿ√A (A>0, целое): {c,r}
+function simp(n,A){let c=1,r=A;for(let t=Math.floor(Math.pow(A,1/n)+1e-9);t>=2;t--){const tn=Math.pow(t,n);if(r%tn===0){c*=t;r/=tn;t=Math.floor(Math.pow(r,1/n)+1e-9)+1;}}return{c,r};}
+function cRad(c,n,r){if(r===1)return neg(c);const R=rad(n,r);return c===1?R:c===-1?'−'+R:neg(c)+R;}
+const isPow=(A,n)=>{const t=Math.round(Math.pow(Math.abs(A),1/n));return Math.pow(t,n)===Math.abs(A);};
+
+/* ================= интерфейс ================= */
+const UI=()=>({
+  eyebrow:L('Алгебра и начала анализа · 11 класс · §5–6','Алгебра және анализ бастамалары · 11-сынып · §5–6'),
+  h1:L('Корень <em>n-й степени</em> и его свойства. Степень с рациональным показателем','<em>n-ші дәрежелі</em> түбір және оның қасиеттері. Рационал көрсеткішті дәреже'),
+  lead:L('Определение корня n-й степени, арифметический корень, уравнение xⁿ = a, свойства корней, преобразования выражений с корнями, степень с рациональным показателем и её свойства — с графиками, интерактивными моделями, решателем с самопроверкой, тренажёром и тестом.','n-ші дәрежелі түбірдің анықтамасы, арифметикалық түбір, xⁿ = a теңдеуі, түбірдің қасиеттері, түбірі бар өрнектерді түрлендіру, рационал көрсеткішті дәреже және оның қасиеттері — графиктермен, интерактивті модельдермен, өзін-өзі тексеретін шешушімен, жаттықтырғышпен және тестпен.'),
+  light:L('Светлая','Ашық'),dark:L('Тёмная','Қараңғы'),
+  tTheory:L('Теория','Теория'),tModel:L('Модели','Модельдер'),tSolve:L('Решатель','Шешуші'),tTrain:L('Тренажёр','Жаттықтырғыш'),tTest:L('Тест','Тест'),
+  genL:L('Тип задания','Тапсырма түрі'),genHint:L('Нажмите на тип — появится новое задание. Решение скрыто: сначала решите сами в поле ниже, затем выберите ответ; подсказки открываются по одному шагу.','Түрін басыңыз — жаңа тапсырма пайда болады. Шешім жасырын: алдымен төмендегі өрісте өзіңіз шешіп, жауапты таңдаңыз; кеңестер бір қадамнан ашылады.'),
+  sAllL:L('Показывать решение сразу (режим учителя)','Шешімді бірден көрсету (мұғалім режимі)'),
+  sDone:L('Решено','Шешілді'),sOk:L('Верно','Дұрыс'),sStreak:L('Серия','Қатарынан'),sBest:L('Рекорд серии','Ең ұзақ қатар'),
+  m1L:L('1. Уравнение xⁿ = a: сколько корней?','1. xⁿ = a теңдеуі: неше түбір бар?'),m2L:L(`2. Графики y = ${rad('n','x')}`,`2. y = ${rad('n','x')} графиктері`),m3L:L('3. Степень с рациональным показателем a<sup>m/n</sup>','3. Рационал көрсеткішті дәреже a<sup>m/n</sup>'),
+});
+function applyUI(){const u=UI();document.querySelectorAll('[data-i]').forEach(e=>{const v=u[e.dataset.i];if(v!==undefined)e.innerHTML=v;});
+  document.title=L('Корень n-й степени','n-ші дәрежелі түбір');
+  document.documentElement.lang=LANG==='kz'?'kk':'ru';[...$('#langSw').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===LANG));}
+const TABS=['theory','model','solve','train','test'];
+function showTab(t){TABS.forEach(x=>{$('#p-'+x).hidden=x!==t;$('#t-'+x).setAttribute('aria-selected',x===t);});try{localStorage.setItem('rtn-tab',t);}catch(e){}}
+document.querySelector('nav.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)showTab(b.dataset.tab);});
+const stepsH=st=>`<ol class="steps">${st.map(s=>`<li><div><span class="why">${s.why}</span><span class="mx">${s.mx}</span></div></li>`).join('')}</ol>`;
+
+/* ================= графики ================= */
+function fplot(svg,o){const{x0,x1,y0,y1,W,H}=o;svg.innerHTML='';svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const X=x=>(x-x0)/(x1-x0)*W,Y=y=>(y1-y)/(y1-y0)*H;const sx=o.sx||1,sy=o.sy||1;
+  for(let v=Math.ceil(x0/sx)*sx;v<=x1;v+=sx)el('line',{x1:X(v),x2:X(v),y1:0,y2:H,stroke:'var(--line)'},svg);
+  for(let v=Math.ceil(y0/sy)*sy;v<=y1;v+=sy)el('line',{x1:0,x2:W,y1:Y(v),y2:Y(v),stroke:'var(--line)'},svg);
+  const id='ar'+Math.random().toString(36).slice(2,8);const d=el('defs',{},svg),mk=el('marker',{id,viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:8,markerHeight:8,orient:'auto'},d);el('path',{d:'M0 0L10 5L0 10z',fill:'var(--muted)'},mk);
+  el('line',{x1:0,x2:W-2,y1:Y(0),y2:Y(0),stroke:'var(--muted)','stroke-width':2,'marker-end':`url(#${id})`},svg);el('line',{x1:X(0),x2:X(0),y1:H,y2:2,stroke:'var(--muted)','stroke-width':2,'marker-end':`url(#${id})`},svg);
+  const lx=o.lx||sx,ly=o.ly||sy;
+  for(let v=Math.ceil(x0/lx)*lx;v<=x1-lx*.3;v+=lx){if(Math.abs(v)<1e-9)continue;txt(svg,fmt(v),X(v),Y(0)+22,{'text-anchor':'middle','font-size':16,fill:'var(--muted)'});}
+  for(let v=Math.ceil(y0/ly)*ly;v<=y1-ly*.3;v+=ly){if(Math.abs(v)<1e-9)continue;txt(svg,fmt(v),X(0)-8,Y(v)+6,{'text-anchor':'end','font-size':16,fill:'var(--muted)'});}
+  txt(svg,'x',W-16,Y(0)-10,{'font-style':'italic',fill:'var(--muted)'});txt(svg,'y',X(0)+10,18,{'font-style':'italic',fill:'var(--muted)'});txt(svg,'0',X(0)-14,Y(0)+20,{'font-size':16,fill:'var(--muted)'});
+  const curve=(f,a,b,at)=>{let dd='',on=false;const N=600;for(let i=0;i<=N;i++){const x=a+(b-a)*i/N,y=f(x);if(!isFinite(y)||y>y1+(y1-y0)||y<y0-(y1-y0)){on=false;continue;}dd+=(on?'L':'M')+X(x).toFixed(1)+' '+Y(y).toFixed(1);on=true;}return el('path',Object.assign({d:dd,fill:'none','stroke-width':3,'stroke-linejoin':'round'},at||{}),svg);};
+  return{X,Y,curve,svg};}
+const nroot=(x,n)=>x>=0?Math.pow(x,1/n):(n%2?-Math.pow(-x,1/n):NaN);
+const COLS=['var(--c1)','var(--c2)','var(--c4)','var(--c3)','#0891b2','#be185d'];
+
+/* ================= ТЕОРИЯ ================= */
+const fig=(id,cap)=>`<figure style="margin:0"><div class="paper-grid"><svg id="${id}" class="plot" role="img" aria-label="${cap}"></svg></div><div class="cap">${cap}</div></figure>`;
+function figPow(svg){const P=fplot(svg,{x0:-2.6,x1:2.6,y0:-4.2,y1:4.2,W:560,H:420});[[2,COLS[0]],[4,COLS[2]],[3,COLS[1]],[5,COLS[3]]].forEach(([n,c])=>{P.curve(x=>Math.pow(x,n),-2.6,2.6,{stroke:c});});
+  txt(svg,'y = x²',P.X(-2.05),P.Y(4)+18,{fill:COLS[0],'font-size':17,'font-weight':700});txt(svg,'y = x⁴',P.X(-1.55),P.Y(4)+38,{fill:COLS[2],'font-size':17,'font-weight':700});txt(svg,'y = x³',P.X(1.62),P.Y(4)+18,{fill:COLS[1],'font-size':17,'font-weight':700});txt(svg,'y = x⁵',P.X(1.05),P.Y(4)+38,{fill:COLS[3],'font-size':17,'font-weight':700});}
+function figRoots(svg){const P=fplot(svg,{x0:-8.5,x1:16.5,y0:-2.6,y1:4.2,W:560,H:340,sx:2,lx:4});[[2,COLS[0]],[3,COLS[1]],[4,COLS[2]],[5,COLS[3]]].forEach(([n,c])=>{P.curve(x=>nroot(x,n),n%2?-8.5:0,16.5,{stroke:c});});
+  [['y = √x',COLS[0]],['y = ∛x',COLS[1]],['y = ⁴√x',COLS[2]],['y = ⁵√x',COLS[3]]].forEach(([t,c],k)=>{el('line',{x1:20,x2:50,y1:22+k*26,y2:22+k*26,stroke:c,'stroke-width':4},svg);txt(svg,t,58,28+k*26,{fill:c,'font-size':17,'font-weight':700});});}
+function figExp(svg){const P=fplot(svg,{x0:-2.6,x1:2.6,y0:-.6,y1:5.2,W:560,H:380,sx:.5,lx:1});P.curve(x=>Math.pow(2,x),-2.6,2.6,{stroke:COLS[0]});P.curve(x=>Math.pow(.5,x),-2.6,2.6,{stroke:COLS[1]});
+  [[1/3],[1/2],[2/3],[3/2],[-1/2]].forEach(([r])=>{el('circle',{cx:P.X(r),cy:P.Y(Math.pow(2,r)),r:5,fill:COLS[0]},svg);});
+  txt(svg,'y = 2ˣ',P.X(1.7),P.Y(4.4),{fill:COLS[0],'font-weight':700,'font-size':17});txt(svg,'y = (½)ˣ',P.X(-2.5),P.Y(4.4),{fill:COLS[1],'font-weight':700,'font-size':17});}
+function renderTheory(){
+  const R=rad,F=frac,sup=(b,e)=>`${b}<sup>${e}</sup>`;
+  const box=(t,body)=>`<div class="know"><span class="kt">${t}</span>${body}</div>`;
+  const ex=(t,cond,sol,ans)=>`<div class="ex"><span class="lbl">${t}</span><div>${cond}</div><div class="sol"><i>${L('Решение.','Шешуі.')}</i> ${sol}</div><div class="answer" style="margin-top:8px;font-size:1.05rem">${L('Ответ','Жауабы')}: ${ans}</div></div>`;
+  const qs=a=>`<div class="qbox"><span class="kt">?</span><ol>${a.map(x=>`<li>${x}</li>`).join('')}</ol></div>`;
+  const props5=[[`(${R('n','a')})<sup>n</sup> = a`],[`${R('n','ab')} = ${R('n','a')}·${R('n','b')}`],[`${R('nk',sup('a','k'))} = ${R('n','a')}`],[`${R('n',F('a','b'))} = ${F(R('n','a'),R('n','b'))}`],[`(${R('n','a')})<sup>k</sup> = ${R('n',sup('a','k'))}`],[`${R('n',R('k','a'))} = ${R('nk','a')}`]];
+  const props6=[`a<sup>r</sup>·a<sup>s</sup> = a<sup>r+s</sup>`,`a<sup>r</sup> : a<sup>s</sup> = a<sup>r−s</sup>`,`(a<sup>r</sup>)<sup>s</sup> = a<sup>rs</sup>`,`(ab)<sup>r</sup> = a<sup>r</sup>b<sup>r</sup>`,`(${F('a','b')})<sup>r</sup> = ${F('a<sup>r</sup>','b<sup>r</sup>')}`];
+  const intp=[`a<sup>m</sup>·a<sup>n</sup> = a<sup>m+n</sup>`,`a<sup>m</sup> : a<sup>n</sup> = a<sup>m−n</sup> (a ≠ 0)`,`(a<sup>m</sup>)<sup>n</sup> = a<sup>mn</sup>`,`(ab)<sup>n</sup> = a<sup>n</sup>b<sup>n</sup>`,`(${F('a','b')})<sup>n</sup> = ${F('a<sup>n</sup>','b<sup>n</sup>')} (b ≠ 0)`,L('если m &gt; n, то a<sup>m</sup> &gt; a<sup>n</sup> при a &gt; 1; a<sup>m</sup> &lt; a<sup>n</sup> при 0 &lt; a &lt; 1','егер m &gt; n болса, онда a &gt; 1 жағдайында a<sup>m</sup> &gt; a<sup>n</sup>; 0 &lt; a &lt; 1 жағдайында a<sup>m</sup> &lt; a<sup>n</sup>')];
+  $('#theoryBox').innerHTML=`
+  <div class="card"><div class="tcard"><div class="stack">
+    <h2>§ 5. ${L('Корень n-й степени и его свойства','n-ші дәрежелі түбір және оның қасиеттері')}</h2>
+    ${box(L('Вы знаете','Сендер білесіңдер'),L('Квадратный корень из числа 25 равен 5, так как 5² = 25, т. е. квадратный корень из числа a есть число, квадрат которого равен числу a.','Мысалы, 25 санының арифметикалық квадрат түбірі 5-ке тең, өйткені 5² = 25. a санының квадрат түбірі квадраты a санына тең болатын қандай да бір сан.'))}
+    <p>${L('Таким же образом можно дать определение корня n-й степени.','Тура осылай a санының <b>n-ші дәрежелі түбірінің</b> анықтамасын беруге болады.')}</p>
+    <div class="defn">${L('<b>Определение.</b> <i><b>Корнем n-й степени</b> (n — натуральное число, отличное от 1) из числа a называется такое число b, n-я степень которого равна числу a.</i>','<b>Анықтама.</b> <i>a санының <b>n-ші дәрежелі түбірі</b> деп n-ші дәрежесі a санына тең болатын b санын айтады.</i>')}<span class="fblock">${R('n','a')} = b, ${L('где','мұндағы')} a = bⁿ. &nbsp;&nbsp;(1)</span></div>
+    <p>${L('Здесь a — число, находящееся под знаком корня, n — показатель корня, b — корень n-й степени числа a (n ∈ N). Например, корень третьей степени из числа 27 равен 3, так как: ∛27 = 3, т. е. 3³ = 27.','Мұнда a саны — n-ші дәрежелі түбір таңбасының ішіндегі сан, n — түбірдің көрсеткіші және n ∈ N (n ≠ 1), b саны a санының n-ші дәрежелі түбірі. Мысалы, 27 санының үшінші дәрежелі түбірі 3-ке тең: ∛27 = 3, өйткені 3³ = 27.')}</p>
+    <p>${L('Рассмотрим случаи, когда показатель корня чётный и нечётный.','n-ші дәрежелі түбір анықтамасындағы түбір көрсеткішінің жұп және тақ болатын жағдайларын жеке қарастырайық.')}</p>
+    <p>${L('Пусть n — <b>чётное</b> число, тогда bⁿ = a ≥ 0, т. е. неотрицательное число, так как чётная степень любого числа — неотрицательное число. Следовательно, подкоренное число корня с чётным показателем не может быть отрицательным числом.','n <b>жұп</b> сан болса, онда bⁿ = a ≥ 0, тек қана оң сан, себебі кез келген санның жұп дәрежесі теріс емес сан болады. Демек, жұп дәрежелі түбір таңбасының ішіндегі a саны теріс сан болуы мүмкін емес.')}</p>
+    <p>${L('Если показатель корня — <b>нечётное</b> число, то можно вычислить корень из любого числа. В этом случае, в равенстве bⁿ = a знаки чисел a и b одинаковые, т. е. корень из положительного числа будет число положительное, из отрицательного числа — отрицательное.','Егер түбір көрсеткіші n <b>тақ</b> болса, онда кез келген саннан n-ші дәрежелі түбірді есептеуге болады. Бұл жағдайда bⁿ = a теңдігіндегі a және b сандарының таңбалары бірдей, яғни оң саннан оң, теріс саннан теріс түбір шығады.')}</p>
+    <p class="m" style="white-space:normal">${L('Например','Мысалы')}: 1) ${R(5,'−32')} = −2, ${L('так как','себебі')} (−2)⁵ = −32; &nbsp; 2) ${R(3,64)} = 4, ${L('так как','себебі')} 4³ = 64.</p>
+    <p>${L('Пусть корень n-й степени из числа a равен x, тогда по определению получаем уравнение xⁿ = a. Уравнение xⁿ = a (где a &gt; 0, n ∈ N, n ≠ 1) в случае чётного n имеет два корня: −ⁿ√a и ⁿ√a, в случае нечётного n — один корень ⁿ√a. Например, числа 7 и −7 являются корнями уравнения x⁴ = 2401, так как 7⁴ = 2401 и (−7)⁴ = 2401.','a санының n-ші дәрежелі түбірі x-ке тең болсын. Онда анықтама бойынша xⁿ = a теңдеуін аламыз. n жұп болғанда, xⁿ = a теңдеуінің (мұндағы a &gt; 0, n ∈ N, n ≠ 1) −ⁿ√a және ⁿ√a екі түбірі, ал n тақ болғанда ⁿ√a шамасына тең бір түбірі болады. Мысалы, 7 және −7 сандары x⁴ = 2401 теңдеуінің түбірі болады, өйткені 7⁴ = 2401 және (−7)⁴ = 2401.')}</p>
+    <div class="tbl-wrap"><table class="cmp"><thead><tr><th>xⁿ = a</th><th>${L('n — чётное','n — жұп')}</th><th>${L('n — нечётное','n — тақ')}</th></tr></thead><tbody>
+      <tr><td>a &gt; 0</td><td>${L('два корня','екі түбір')}: ±${R('n','a')}</td><td>${L('один корень','бір түбір')} ${R('n','a')}</td></tr>
+      <tr><td>a = 0</td><td>x = 0</td><td>x = 0</td></tr>
+      <tr><td>a &lt; 0</td><td>${L('корней нет','түбірі жоқ')}</td><td>${L('один корень','бір түбір')} ${R('n','a')} = −${R('n','|a|')}</td></tr></tbody></table></div>
+    <div class="defn">${L('<b>Определение.</b> <i><b>Арифметическим корнем n-й степени</b> неотрицательного числа a называется неотрицательное число b, n-я степень которого равна a.</i>','<b>Анықтама.</b> <i>Теріс емес a санының <b>n-ші дәрежелі арифметикалық түбірі</b> деп n-ші дәрежесі a санына тең болатын теріс емес b санын айтады.</i>')}</div>
+    <button class="btn sm ghost" data-go="model" style="align-self:start">${L('Модель «xⁿ = a» →','«xⁿ = a» моделі →')}</button>
+  </div><div class="stack sticky">${fig('fPow',L('Графики y = xⁿ: при чётном n — симметрия относительно Oy, при нечётном — относительно начала координат','y = xⁿ графиктері: жұп n — Oy-ке қатысты симметрия, тақ n — координаталар басына қатысты'))}${fig('fRoots',L('Графики y = ⁿ√x: при чётном n — только x ≥ 0','y = ⁿ√x графиктері: жұп n үшін — тек x ≥ 0'))}</div></div></div>
+
+  <div class="card"><div class="tcard"><div class="stack">
+    <h3>${L('Свойства корня n-й степени','n-ші дәрежелі түбірдің қасиеттері')}</h3>
+    <p>${L('Для положительных чисел a, b при n ∈ N, k ∈ N для корней n-й, k-й степеней выполняются следующие свойства:','n ∈ N және k ∈ N болғанда a және b теріс емес нақты сандары үшін n-ші және k-ші дәрежелі түбірлердің мына қасиеттері орындалады:')}</p>
+    <div class="tbl-wrap"><table class="cmp props"><tbody>${props5.map(([a],i)=>`<tr><td><b>${i+1})</b> ${a}</td></tr>`).join('')}</tbody></table></div>
+    <p>${L('Перечисленные свойства можно доказать, используя возведение в степень и определение корня n-й степени.','Берілген n-ші дәрежелі түбірдің қасиеттерін дәрежелеу және түбір табу амалдарының анықтамаларын пайдаланып дәлелдеуге болады.')}</p>
+    <details class="qa"><summary>${L('Доказательство свойства 2','2-қасиеттің дәлелдеуі')}</summary><p>${L(`По определению корня n-й степени ${R('n','ab')} есть неотрицательное число, n-я степень которого равна ab. Так как ${R('n','a')} ≥ 0, ${R('n','b')} ≥ 0, то ${R('n','a')}·${R('n','b')} — неотрицательное число. По свойству степени (a·b)ⁿ = aⁿbⁿ: (${R('n','a')}·${R('n','b')})ⁿ = (${R('n','a')})ⁿ·(${R('n','b')})ⁿ = a·b. Таким образом, ${R('n','ab')} = ${R('n','a')}·${R('n','b')}.`,`n-ші дәрежелі түбірдің анықтамасы бойынша ${R('n','ab')} дегеніміз — n-ші дәрежесі ab-ға тең теріс емес сан. ${R('n','a')} ≥ 0, ${R('n','b')} ≥ 0 болғандықтан, ${R('n','a')}·${R('n','b')} саны теріс емес. Натурал көрсеткішті дәреженің (a·b)ⁿ = aⁿbⁿ қасиеті бойынша: (${R('n','a')}·${R('n','b')})ⁿ = (${R('n','a')})ⁿ·(${R('n','b')})ⁿ = a·b. Сонымен, ${R('n','ab')} = ${R('n','a')}·${R('n','b')}.`)}</p></details>
+    <details class="qa"><summary>${L('Доказательство свойства 6','6-қасиеттің дәлелдеуі')}</summary><p>${L(`Возведём в nk-ю степень выражение ${R('n',R('k','a'))}: (${R('n',R('k','a'))})<sup>nk</sup> = [(${R('n',R('k','a'))})<sup>n</sup>]<sup>k</sup> = (${R('k','a')})<sup>k</sup> = a. Следовательно, ${R('n',R('k','a'))} является корнем nk-й степени из числа a.`,`${R('n',R('k','a'))} өрнегін nk дәрежесіне шығарайық: (${R('n',R('k','a'))})<sup>nk</sup> = [(${R('n',R('k','a'))})<sup>n</sup>]<sup>k</sup> = (${R('k','a')})<sup>k</sup> = a. Соңғы теңдіктен ${R('n',R('k','a'))} өрнегі a санының nk дәрежелі түбірі екені шығады.`)}</p></details>
+    <div class="note">${L(`Ещё полезно помнить: ${R('n',sup('a','n'))} = |a| при чётном n и ${R('n',sup('a','n'))} = a при нечётном n (a — любое число); если 0 ≤ a &lt; b, то ${R('n','a')} &lt; ${R('n','b')}.`,`Сондай-ақ есте сақтаңдар: жұп n үшін ${R('n',sup('a','n'))} = |a|, тақ n үшін ${R('n',sup('a','n'))} = a (a — кез келген сан); егер 0 ≤ a &lt; b болса, ${R('n','a')} &lt; ${R('n','b')}.`)}</div>
+  </div><div class="stack">
+    ${ex(L('Пример 1','1-мысал'),L(`Преобразуем выражения: 1) ${R(5,8)}·${R(5,4)}; 2) ${R(4,'5'+F(1,16))}; 3) ${R(3,R(5,7))}; 4) ${R(21,128)}.`,`Берілген өрнектерді түрлендірейік: 1) ${R(5,8)}·${R(5,4)}; 2) ${R(4,'5'+F(1,16))}; 3) ${R(3,R(5,7))}; 4) ${R(21,128)}.`),
+      `1) ${R(5,8)}·${R(5,4)} = ${R(5,'8·4')} = ${R(5,32)} = 2; &nbsp; 2) ${R(4,'5'+F(1,16))} = ${R(4,F(81,16))} = ${F(3,2)} = 1,5; &nbsp; 3) ${R(3,R(5,7))} = ${R(15,7)}; &nbsp; 4) ${R(21,128)} = ${R(21,sup(2,7))} = ${R(3,2)}.`,`1) 2; 2) 1,5; 3) ${R(15,7)}; 4) ${R(3,2)}`)}
+    ${ex(L('Пример 2','2-мысал'),L(`Вынесем множитель из-под корня: 1) ${R(4,'243b⁴')}, b &gt; 0; 2) ${R(2,'45b⁶')}, b &lt; 0; 3) ${R(3,'500a⁶b⁸')}.`,`1) ${R(4,'243b⁴')}, b &gt; 0; 2) ${R(2,'45b⁶')}, b &lt; 0; 3) ${R(3,'500a⁶b⁸')} түбірлерінен көбейткішті түбір таңбасының алдына шығарайық.`),
+      L(`1) Так как b &gt; 0, выносим положительный множитель: ${R(4,'243b⁴')} = ${R(4,'3·81·b⁴')} = 3b${R(4,3)}; 2) так как b &lt; 0, выносим отрицательный множитель: ${R(2,'45b⁶')} = ${R(2,'5·9·(b³)²')} = −3b³${R(2,5)}; 3) ${R(3,'500a⁶b⁸')} = ${R(3,'125·4·(a²)³·(b²)³·b²')} = 5a²b²${R(3,'4b²')}.`,`1) b &gt; 0 болғандықтан, түбір таңбасының ішінен оң таңбалы көбейткіш шығады: ${R(4,'243b⁴')} = ${R(4,'3·81·b⁴')} = 3b${R(4,3)}; 2) b &lt; 0, сондықтан түбір таңбасының ішінен теріс таңбалы көбейткіш шығады: ${R(2,'45b⁶')} = ${R(2,'5·9·(b³)²')} = −3b³${R(2,5)}; 3) ${R(3,'500a⁶b⁸')} = ${R(3,'125·4·(a²)³·(b²)³·b²')} = 5a²b²${R(3,'4b²')}.`),
+      `1) 3b${R(4,3)}; 2) −3b³${R(2,5)}; 3) 5a²b²${R(3,'4b²')}`)}
+    ${ex(L('Пример 3','3-мысал'),L(`Внесём множитель под знак корня: 1) 4${R(3,3)}; 2) −a${R(6,3)}, a &gt; 0.`,`1) 4${R(3,3)}; 2) −a${R(6,3)}, a &gt; 0 өрнектеріндегі көбейткішті түбір астына енгізейік.`),
+      L(`1) Так как 4${R(3,3)} — корень третьей степени, внесём число 4 под корень с показателем 3: 4${R(3,3)} = ${R(3,'4³·3')} = ${R(3,192)}. 2) Так как −a${R(6,3)} — корень шестой степени и a — неотрицательное число, под знак корня вносим число a с показателем 6: −a${R(6,3)} = −${R(6,'3a⁶')}.`,`1) 4${R(3,3)} өрнегінде түбір үшінші дәрежелі болғандықтан, 4 санын түбір таңбасының ішіне үшінші дәрежемен енгіземіз: 4${R(3,3)} = ${R(3,'4³·3')} = ${R(3,192)}. 2) −a${R(6,3)} өрнегіндегі a саны теріс емес сан және түбір алтыншы дәрежелі болғандықтан, түбір таңбасының ішіне a санының алтыншы дәрежесін енгіземіз: −a${R(6,3)} = −${R(6,'3a⁶')}.`),
+      `1) ${R(3,192)}; 2) −${R(6,'3a⁶')}`)}
+    ${qs([L('От чего зависит число значений корня n-й степени? Ответ обоснуйте.','n-ші дәрежелі түбір мәнінің саны неге байланысты? Жауабын түсіндіріңдер.'),L('Почему не существует корень чётной степени из отрицательного числа? Ответ обоснуйте.','Неге теріс санның жұп дәрежелі түбірі болмайды? Жауабын түсіндіріңдер.')])}
+  </div></div></div>
+
+  <div class="card"><div class="tcard"><div class="stack">
+    <h2>§ 6. ${L('Степень с рациональным показателем','Рационал көрсеткішті дәреже')}</h2>
+    ${box(L('Вы знаете','Сендер білесіңдер'),L('Возведение в натуральную степень любого числа, а также возведение в нулевую и целую отрицательную степень числа, отличного от нуля. Известно, что для любых чисел a и b, для любых целых чисел m и n выполняются следующие свойства:','Кез келген санды натурал дәрежеге, нөлден өзге санды нөлінші және теріс бүтін дәрежеге шығару, сонымен қатар кез келген a және b сандары мен кез келген m және n бүтін сандары үшін мына қасиеттердің орындалатыны белгілі:')+`<ol class="ip">${intp.map(x=>`<li>${x}</li>`).join('')}</ol>`)}
+    <p>${L('Теперь рассмотрим примеры возведения в положительную и отрицательную дробную степень любых неотрицательных чисел. Например, 3<sup>5/6</sup>; 4<sup>2/8</sup>; 16<sup>3/4</sup>; 5<sup>−3/4</sup>.','Енді кез келген теріс емес санды оң және теріс бөлшек дәрежеге шығаруды қарастырайық. Мысалы, 3<sup>5/6</sup>; 4<sup>2/8</sup>; 16<sup>3/4</sup>; 5<sup>−3/4</sup>.')}</p>
+    <p>${L(`Возьмём число с рациональным показателем a<sup>m/n</sup>, где n ∈ N, m ∈ Z. Возведём данное выражение в n-ю степень: (a<sup>m/n</sup>)<sup>n</sup> = a<sup>(m/n)·n</sup> = a<sup>m</sup>. По определению корня n-й степени из последнего равенства получаем, что число a<sup>m/n</sup> есть корень n-й степени из числа a<sup>m</sup>.`,`Рационал көрсеткішті a<sup>m/n</sup> санын алайық, мұндағы n ∈ N, ал m ∈ Z. Осы өрнекті n-ші дәрежеге шығарсақ, (a<sup>m/n</sup>)<sup>n</sup> = a<sup>(m/n)·n</sup> = a<sup>m</sup>. n-ші дәрежелі түбірлердің анықтамасына сәйкес соңғы теңдіктен a<sup>m/n</sup> саны a<sup>m</sup> санының n-ші дәрежелі түбірі болады.`)}</p>
+    <div class="defn">${L('<b>Определение.</b> <i><b>Степенью числа a &gt; 0 с рациональным показателем</b> m/n называется значение корня n-й степени из числа a<sup>m</sup>.</i>','<b>Анықтама.</b> <i>a &gt; 0 санының m/n <b>рационал көрсеткішті дәрежесі</b> деп a<sup>m</sup> санынан алынған n-ші дәрежелі түбірдің мәнін айтады.</i>')}<span class="fblock">a<sup>${F('m','n')}</sup> = ${R('n','a<sup>m</sup>')}. &nbsp;&nbsp;(1)</span></div>
+    <p>${L('В данном случае m — любое целое, n — любое натуральное число (n &gt; 1) и m — показатель подкоренного числа, а n — показатель корня.','Мұндағы m — кез келген бүтін, n — кез келген натурал сан (n &gt; 1) және n — түбір көрсеткіші, m — түбір таңбасының ішіндегі a санының дәрежесі.')}</p>
+    ${ex(L('Пример 1','1-мысал'),L('Запишем в виде корня степень с рациональным показателем: 1) 6<sup>2/5</sup>; 2) a<sup>−4/13</sup>; 3) 5<sup>1,7</sup>.','Рационал көрсеткішті дәрежені түбір түрінде жазайық: 1) 6<sup>2/5</sup>; 2) a<sup>−4/13</sup>; 3) 5<sup>1,7</sup>.'),
+      L(`Используем формулу (1): 1) 6<sup>2/5</sup> = ${R(5,'6²')}; 2) a<sup>−4/13</sup> = ${R(13,'a<sup>−4</sup>')}; 3) вначале переведём десятичную дробь в показателе в обыкновенную дробь, затем воспользуемся формулой (1): 5<sup>1,7</sup> = 5<sup>17/10</sup> = ${R(10,'5<sup>17</sup>')}.`,`(1)-формуланы қолданып өрнекті: 1) 6<sup>2/5</sup> = ${R(5,'6²')}; 2) a<sup>−4/13</sup> = ${R(13,'a<sup>−4</sup>')} түрінде жазамыз; 3) көрсеткіштегі ондық бөлшекті жай бөлшекке айналдырған соң (1)-формуланы қолданамыз: 5<sup>1,7</sup> = 5<sup>17/10</sup> = ${R(10,'5<sup>17</sup>')}.`),
+      `1) ${R(5,'6²')}; 2) ${R(13,'a<sup>−4</sup>')}; 3) ${R(10,'5<sup>17</sup>')}`)}
+    ${ex(L('Пример 2','2-мысал'),L('Вычислим значение выражения: 1) 8<sup>4/3</sup>; 2) 625<sup>0,75</sup>; 3) 128<sup>−3/7</sup>.','1) 8<sup>4/3</sup>; 2) 625<sup>0,75</sup>; 3) 128<sup>−3/7</sup> өрнектерінің мәндерін есептейік.'),
+      `1) 8<sup>4/3</sup> = ${R(3,'8⁴')} = ${R(3,'8³·2³')} = 8·2 = 16; &nbsp; 2) 625<sup>0,75</sup> = ${R(4,'625³')} = ${R(4,'(5³)⁴')} = 5³ = 125; &nbsp; 3) 128<sup>−3/7</sup> = ${R(7,'128<sup>−3</sup>')} = ${R(7,'(2<sup>−3</sup>)<sup>7</sup>')} = ${F(1,'2³')} = ${F(1,8)}.`,`1) 16; 2) 125; 3) ${F(1,8)}`)}
+    <div class="note">${L(`<b>Примечание.</b> Если a &lt; 0, то степень с рациональным показателем не определяется однозначно. Например, (−27)<sup>1/3</sup> = ${R(3,'−27')} = ${R(3,'(−3)³')} = −3, а 1/3 = 2/6. Если же возьмём (−27)<sup>2/6</sup> = ${R(6,'(−27)²')} = ${R(6,'27²')} = ${R(6,'3⁶')} = 3. Следовательно, основание степени не может быть отрицательным числом.`,`<b>Ескерту.</b> Егер a &lt; 0 болса, онда рационал көрсеткішті дәреже бірмәнді анықталмайды. Мысалы, (−27)<sup>1/3</sup> = ${R(3,'−27')} = ${R(3,'(−3)³')} = −3. Ал 1/3 = 2/6. Сонда (−27)<sup>2/6</sup> = ${R(6,'(−27)²')} = ${R(6,'27²')} = ${R(6,'3⁶')} = 3. Демек, дәреженің негізі теріс сан бола алмайды.`)}</div>
+  </div><div class="stack sticky">${fig('fExp',L('Значения 2ʳ при r = −1/2, 1/3, 1/2, 2/3, 3/2 лежат на графике y = 2ˣ','r = −1/2, 1/3, 1/2, 2/3, 3/2 болғандағы 2ʳ мәндері y = 2ˣ графигінде жатады'))}<button class="btn sm ghost" data-go="model" style="align-self:start">${L('Модель «a<sup>m/n</sup>» →','«a<sup>m/n</sup>» моделі →')}</button></div></div></div>
+
+  <div class="card"><div class="tcard"><div class="stack">
+    <h3>${L('Свойства степени с рациональным показателем','Рационал көрсеткішті дәреженің қасиеттері')}</h3>
+    <p>${L('Свойства степени с целым показателем выполняются и для степени с рациональным показателем. Для a &gt; 0, b &gt; 0 и любых рациональных чисел r и s выполняются равенства:','Дәреженің қасиеттері рационал көрсеткішті дәрежелер үшін де орындалады. a &gt; 0, b &gt; 0 және кез келген r мен s рационал сандары үшін мына теңдіктер орындалады:')}</p>
+    <div class="tbl-wrap"><table class="cmp props"><tbody>${props6.map((a,i)=>`<tr><td><b>${i+1})</b> ${a}</td></tr>`).join('')}</tbody></table></div>
+    <p>${L('Степень числа 0 определена только для положительных показателей, т. е. 0<sup>r</sup> = 0 при r &gt; 0.','0 санының дәрежесі тек оң көрсеткіштер үшін анықталған, яғни r &gt; 0 болғанда 0<sup>r</sup> = 0.')}</p>
+    <details class="qa"><summary>${L('Доказательство свойства 2','2-қасиеттің дәлелдеуі')}</summary><p>${L(`Введём обозначения r = m/n, s = p/q, где n и q — натуральные числа, m, p — целые числа. a<sup>r</sup> : a<sup>s</sup> = ${R('n','a<sup>m</sup>')} : ${R('q','a<sup>p</sup>')} = ${R('nq','a<sup>mq</sup>')} : ${R('nq','a<sup>np</sup>')} = ${R('nq','a<sup>mq−np</sup>')} = a<sup>(mq−np)/nq</sup> = a<sup>m/n − p/q</sup> = a<sup>r−s</sup>.`,`r = m/n, s = p/q деп белгілейік, мұндағы n және q — натурал сандар, ал m, p — бүтін сандар. a<sup>r</sup> : a<sup>s</sup> = ${R('n','a<sup>m</sup>')} : ${R('q','a<sup>p</sup>')} = ${R('nq','a<sup>mq</sup>')} : ${R('nq','a<sup>np</sup>')} = ${R('nq','a<sup>mq−np</sup>')} = a<sup>(mq−np)/nq</sup> = a<sup>m/n − p/q</sup> = a<sup>r−s</sup>.`)}</p></details>
+    <p>${L('Для степени с рациональным показателем справедливы ещё два свойства в виде неравенств:','Сонымен қатар, рационал көрсеткішті дәреженің теңсіздік арқылы берілетін келесі екі қасиеті бар:')}</p>
+    <div class="defn">${L('<b>6.</b> Если r — рациональное число и 0 &lt; a &lt; b, то a<sup>r</sup> &lt; b<sup>r</sup> при r &gt; 0; a<sup>r</sup> &gt; b<sup>r</sup> при r &lt; 0.','<b>6.</b> r — рационал сан және 0 &lt; a &lt; b болса, онда r &gt; 0 болғанда a<sup>r</sup> &lt; b<sup>r</sup>; r &lt; 0 болғанда a<sup>r</sup> &gt; b<sup>r</sup>.')}<br>${L('<b>7.</b> Для рациональных чисел r и s из неравенства r &gt; s получим: a<sup>r</sup> &gt; a<sup>s</sup> при a &gt; 1; a<sup>r</sup> &lt; a<sup>s</sup> при 0 &lt; a &lt; 1.','<b>7.</b> Кез келген r және s рационал сандары үшін r &gt; s теңсіздігінен a &gt; 1 болса, онда a<sup>r</sup> &gt; a<sup>s</sup>; 0 &lt; a &lt; 1 болса, онда a<sup>r</sup> &lt; a<sup>s</sup> шығады.')}</div>
+  </div><div class="stack">
+    ${ex(L('Пример 3','3-мысал'),L(`Упростим выражение: ${F('x<sup>1/2</sup> − y<sup>1/2</sup>','x<sup>1/4</sup> + y<sup>1/4</sup>')} + y<sup>1/4</sup>.`,`Өрнекті ықшамдайық: ${F('x<sup>1/2</sup> − y<sup>1/2</sup>','x<sup>1/4</sup> + y<sup>1/4</sup>')} + y<sup>1/4</sup>.`),
+      `${F('(x<sup>1/4</sup> − y<sup>1/4</sup>)(x<sup>1/4</sup> + y<sup>1/4</sup>)','x<sup>1/4</sup> + y<sup>1/4</sup>')} + y<sup>1/4</sup> = x<sup>1/4</sup> − y<sup>1/4</sup> + y<sup>1/4</sup> = x<sup>1/4</sup>. `+L('Использованы формула a² − b² = (a + b)(a − b), свойство сокращения дроби и приведение подобных членов.','a² − b² = (a + b)(a − b) формуласы, бөлшекті қысқарту және ұқсас мүшелерді біріктіру қолданылды.'),'x<sup>1/4</sup>')}
+    ${ex(L('Пример 4','4-мысал'),L(`Сравним числа: 1) ${R(5,27)} и ${R(4,9)}; 2) ${R(9,16)} и ${R(7,8)}; 3) (${F(1,4)})<sup>300</sup> и (${F(1,6)})<sup>200</sup>.`,`Берілген сандарды салыстырайық: 1) ${R(5,27)} және ${R(4,9)}; 2) ${R(9,16)} және ${R(7,8)}; 3) (${F(1,4)})<sup>300</sup> және (${F(1,6)})<sup>200</sup>.`),
+      L(`1) Преобразуем корни в степени с одинаковыми основаниями: ${R(5,27)} = ${R(5,'3³')} = 3<sup>3/5</sup> = 3<sup>0,6</sup>; ${R(4,9)} = ${R(4,'3²')} = 3<sup>1/2</sup> = 3<sup>0,5</sup>. Свойство 7: 3 &gt; 1 и 0,6 &gt; 0,5, значит ${R(5,27)} &gt; ${R(4,9)}. 2) ${R(9,16)} = 2<sup>4/9</sup>, ${R(7,8)} = 2<sup>3/7</sup>; 2 &gt; 1 и 4/9 &gt; 3/7, значит ${R(9,16)} &gt; ${R(7,8)}. 3) Приведём к одинаковым показателям: (${F(1,4)})<sup>300</sup> = (${F(1,64)})<sup>100</sup>, (${F(1,6)})<sup>200</sup> = (${F(1,36)})<sup>100</sup>. Свойство 6: 0 &lt; 1/64 &lt; 1/36 и 100 &gt; 0, значит (${F(1,4)})<sup>300</sup> &lt; (${F(1,6)})<sup>200</sup>.`,`1) Алдымен n-ші дәрежелі түбірлерді негіздері бірдей рационал көрсеткішті дәрежеге келтіреміз: ${R(5,27)} = ${R(5,'3³')} = 3<sup>3/5</sup> = 3<sup>0,6</sup>; ${R(4,9)} = ${R(4,'3²')} = 3<sup>1/2</sup> = 3<sup>0,5</sup>. 7-қасиет: 3 &gt; 1 және 0,6 &gt; 0,5, демек ${R(5,27)} &gt; ${R(4,9)}. 2) ${R(9,16)} = 2<sup>4/9</sup>, ${R(7,8)} = 2<sup>3/7</sup>; 2 &gt; 1 және 4/9 &gt; 3/7, демек ${R(9,16)} &gt; ${R(7,8)}. 3) Бірдей көрсеткіштерге келтірейік: (${F(1,4)})<sup>300</sup> = (${F(1,64)})<sup>100</sup>, (${F(1,6)})<sup>200</sup> = (${F(1,36)})<sup>100</sup>. 6-қасиет: 0 &lt; 1/64 &lt; 1/36 және 100 &gt; 0, демек (${F(1,4)})<sup>300</sup> &lt; (${F(1,6)})<sup>200</sup>.`),
+      `1) ${R(5,27)} &gt; ${R(4,9)}; 2) ${R(9,16)} &gt; ${R(7,8)}; 3) (${F(1,4)})<sup>300</sup> &lt; (${F(1,6)})<sup>200</sup>`)}
+    ${qs([L('Укажите область определения степени с рациональным показателем. Ответ обоснуйте.','Рационал көрсеткішті дәреженің анықталу облысын атаңдар. Жауабын түсіндіріңдер.'),L('Верно ли утверждение: если основанием степени с рациональным показателем является целое число, то значение данной степени образует множество целых чисел? Ответ обоснуйте.','«Негізі бүтін сан болғанда, рационал көрсеткішті дәреженің мәндері бүтін сандар жиынын береді» деген тұжырым ақиқат па? Жауабын түсіндіріңдер.'),L(`При каких значениях a верно равенство a<sup>3/5</sup> = ${R(5,'a³')}?`,`a<sup>3/5</sup> = ${R(5,'a³')} теңдігі a-ның қандай мәндерінде дұрыс болады?`)])}
+  </div></div></div>`;
+  $('#fPow').setAttribute('viewBox','0 0 560 420');figPow($('#fPow'));figRoots($('#fRoots'));figExp($('#fExp'));
+  $('#theoryBox').querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{showTab(b.dataset.go);scrollTo(0,0);}));}
+
+const BOOK=()=>{const R=rad,F=frac,C=L('Вычислите','Есептеңіз'),E=L('Решите уравнение','Теңдеуді шешіңіз'),V=L('Найдите значение выражения','Өрнектің мәнін табыңыз'),W=L('Напишите выражение в виде корня','Өрнекті түбір түрінде жазыңыз'),none=L('корней нет','түбірі жоқ');
+  const st=(why,mx)=>({why,mx});const def=L('По определению корня n-й степени:','n-ші дәрежелі түбірдің анықтамасы бойынша:');
+  return[
+  ['5.3 (1)',C,R(5,'−32'),'−2',['2',L('не существует','мағынасы жоқ'),'−6,4'],[st(def,`(−2)⁵ = −32 ⇒ ${R(5,'−32')} = −2`)]],
+  ['5.3 (2)',C,R(4,81),'3',['−3','±3','20,25'],[st(def,`3⁴ = 81 ⇒ ${R(4,81)} = 3`)]],
+  ['5.3 (3)',C,R(3,'−64'),'−4',['4',L('не существует','мағынасы жоқ'),'−8'],[st(def,`(−4)³ = −64 ⇒ ${R(3,'−64')} = −4`)]],
+  ['5.3 (4)',C,R(3,'−216'),'−6',['6','−72',L('не существует','мағынасы жоқ')],[st(def,`(−6)³ = −216 ⇒ ${R(3,'−216')} = −6`)]],
+  ['5.4 (1)',C,R(3,F(27,64)),F(3,4),[F(4,3),F(9,8),F(3,8)],[st(L('Свойство 4 (корень из частного):','4-қасиет (бөліндінің түбірі):'),`${R(3,F(27,64))} = ${F(R(3,27),R(3,64))} = ${F(3,4)}`)]],
+  ['5.4 (2)',C,R(4,F(625,81)),F(5,3),[F(3,5),F(25,9),'−'+F(5,3)],[st(L('Свойство 4:','4-қасиет:'),`${R(4,F(625,81))} = ${F(R(4,625),R(4,81))} = ${F(5,3)}`)]],
+  ['5.4 (3)',C,R(3,'−'+F(27,8)),'−'+F(3,2),[F(3,2),'−'+F(9,4),L('не существует','мағынасы жоқ')],[st(L('Для нечётного показателя минус выносится; свойство 4:','Тақ көрсеткіш үшін минус шығарылады; 4-қасиет:'),`${R(3,'−'+F(27,8))} = −${F(R(3,27),R(3,8))} = −${F(3,2)}`)]],
+  ['5.4 (4)',C,R(4,F(256,81)),F(4,3),[F(3,4),F(16,9),F(4,9)],[st(L('Свойство 4:','4-қасиет:'),`${R(4,F(256,81))} = ${F(R(4,256),R(4,81))} = ${F(4,3)}`)]],
+  ['5.5 (1)',E,'x³ + 8 = 0','x = −2',['x = 2','x = ±2',none],[st(L('Переносим 8:','8-ді көшіреміз:'),'x³ = −8'),st(L('n = 3 — нечётное: один корень:','n = 3 — тақ: бір түбір:'),`x = ${R(3,'−8')} = −2`)]],
+  ['5.5 (2)',E,'x⁵ = 7','x = '+R(5,7),['x = ±'+R(5,7),'x = '+F(7,5),none],[st(L('n = 5 — нечётное, a = 7 &gt; 0: один корень:','n = 5 — тақ, a = 7 &gt; 0: бір түбір:'),`x = ${R(5,7)}`)]],
+  ['5.5 (3)',E,'x⁶ = 4','x = ±'+R(3,2),['x = '+R(3,2),'x = ±2',none],[st(L('n = 6 — чётное, a &gt; 0: два корня:','n = 6 — жұп, a &gt; 0: екі түбір:'),`x = ±${R(6,4)}`),st(L('Свойство 3: сокращаем показатели:','3-қасиет: көрсеткіштерді қысқартамыз:'),`${R(6,'2²')} = ${R(3,2)} ⇒ x = ±${R(3,2)}`)]],
+  ['5.5 (4)',E,'x⁴ = 16','x = ±2',['x = 2','x = 4',none],[st(L('n = 4 — чётное, a &gt; 0: два корня:','n = 4 — жұп, a &gt; 0: екі түбір:'),`x = ±${R(4,16)} = ±2`)]],
+  ['5.6 (1)',E,'16x⁴ − 1 = 0','x = ±'+F(1,2),['x = '+F(1,2),'x = ±'+F(1,4),none],[st(L('Выражаем x⁴:','x⁴-ті өрнектейміз:'),`x⁴ = ${F(1,16)}`),st(L('Чётный показатель — два корня:','Жұп көрсеткіш — екі түбір:'),`x = ±${R(4,F(1,16))} = ±${F(1,2)}`)]],
+  ['5.6 (3)',E,'x⁷ + 128 = 0','x = −2',['x = 2','x = ±2',none],[st(L('Выражаем x⁷:','x⁷-ні өрнектейміз:'),'x⁷ = −128'),st(L('Нечётный показатель — один корень:','Тақ көрсеткіш — бір түбір:'),`x = ${R(7,'−128')} = −2`)]],
+  ['5.6 (4)',E,'x⁶ − 64 = 0','x = ±2',['x = 2','x = ±8',none],[st(L('Выражаем x⁶:','x⁶-ны өрнектейміз:'),'x⁶ = 64'),st(L('Чётный показатель — два корня:','Жұп көрсеткіш — екі түбір:'),`x = ±${R(6,64)} = ±2`)]],
+  ['5.8 (1)',V,R(4,'625·81'),'15',['45','225','8'],[st(L('Свойство 2 (корень из произведения):','2-қасиет (көбейтіндінің түбірі):'),`${R(4,'625·81')} = ${R(4,625)}·${R(4,81)} = 5·3 = 15`)]],
+  ['5.8 (2)',V,R(5,'243·32'),'6',['5','12','9'],[st(L('Свойство 2:','2-қасиет:'),`${R(5,'243·32')} = ${R(5,243)}·${R(5,32)} = 3·2 = 6`)]],
+  ['5.8 (3)',V,R(3,'8·27'),'6',['5','72','9'],[st(L('Свойство 2:','2-қасиет:'),`${R(3,'8·27')} = ${R(3,8)}·${R(3,27)} = 2·3 = 6`)]],
+  ['5.8 (4)',V,R(4,'0,0001·81'),'0,3',['0,03','3','0,9'],[st(L('Свойство 2:','2-қасиет:'),`${R(4,'0,0001·81')} = ${R(4,'0,0001')}·${R(4,81)} = 0,1·3 = 0,3`)]],
+  ['6.1 (1)',W,'3<sup>1,8</sup>',R(5,'3⁹'),[R(9,'3⁵'),R(10,'3⁸'),R(5,'3⁸')],[st(L('Переводим десятичную дробь в обыкновенную:','Ондық бөлшекті жай бөлшекке айналдырамыз:'),'1,8 = '+F(18,10)+' = '+F(9,5)),st(L('Формула (1):','(1)-формула:'),`3<sup>9/5</sup> = ${R(5,'3⁹')}`)]],
+  ['6.1 (2)',W,'2<sup>1,6</sup>',R(5,'2⁸'),[R(8,'2⁵'),R(10,'2⁶'),R(5,'2⁶')],[st(L('Переводим показатель:','Көрсеткішті айналдырамыз:'),'1,6 = '+F(8,5)),st(L('Формула (1):','(1)-формула:'),`2<sup>8/5</sup> = ${R(5,'2⁸')}`)]],
+  ['6.1 (3)',W,'6<sup>−1,5</sup>',R(2,'6<sup>−3</sup>'),[R(3,'6<sup>−2</sup>'),'−'+R(2,'6³'),R(2,'6³')],[st(L('Переводим показатель:','Көрсеткішті айналдырамыз:'),'−1,5 = −'+F(3,2)),st(L('Формула (1):','(1)-формула:'),`6<sup>−3/2</sup> = ${R(2,'6<sup>−3</sup>')}`)]],
+  ['6.1 (4)',W,'7<sup>1,2</sup>',R(5,'7⁶'),[R(6,'7⁵'),R(10,'7¹²').replace('¹²','<sup>12</sup>')+' ',R(5,'7¹')],[st(L('Переводим показатель:','Көрсеткішті айналдырамыз:'),'1,2 = '+F(6,5)),st(L('Формула (1):','(1)-формула:'),`7<sup>6/5</sup> = ${R(5,'7⁶')}`)]],
+  ['6.3 (1)',V,'81<sup>0,5</sup>','9',['40,5','3','±9'],[st(L('0,5 = 1/2, формула (1):','0,5 = 1/2, (1)-формула:'),`81<sup>1/2</sup> = ${R(2,81)} = 9`)]],
+  ['6.3 (3)',V,'16<sup>7/4</sup>','128',['28','64','4'],[st(L('Формула (1):','(1)-формула:'),`16<sup>7/4</sup> = (${R(4,16)})⁷ = 2⁷ = 128`)]],
+ ];};
+function gBook(){const B=BOOK();const[n,v,expr,a,w,steps]=pick(B);return{q:`<span class="bk">№ ${n}</span> ${v}: ${expr}`,a,w,av:null,steps};}
+
+/* ================= МОДЕЛИ ================= */
+const MD={n:4,a:16,show:[2,3],m:2,d:3,b:8};
+function exactRoot(a,n){if(Math.abs(a-Math.round(a))>1e-9)return null;const A=Math.round(a);if(A<0&&n%2===0)return null;const s=simp(n,Math.abs(A));return(A<0?'−':'')+cRad(s.c,n,s.r).replace(/^−/,'');}
+function drawM1(){const n=MD.n,a=MD.a;$('#m1n').innerHTML=[2,3,4,5,6,7,8].map(k=>`<button data-n="${k}" aria-pressed="${k===n}" class="chip">n = ${k}</button>`).join('');$('#m1a').value=a;$('#m1av').textContent=fmt(a);
+  const ym=Math.max(12,Math.abs(a)*1.3),xm=Math.max(2.6,Math.pow(ym,1/n)*1.15);const P=fplot($('#m1G'),{x0:-xm,x1:xm,y0:-ym,y1:ym,W:620,H:420,sx:xm>4?1:.5,lx:1,sy:ym>40?10:ym>20?5:2,ly:ym>40?20:ym>20?10:4});
+  P.curve(x=>Math.pow(x,n),-xm,xm,{stroke:'var(--c1)','stroke-width':3.5});el('line',{x1:0,x2:620,y1:P.Y(a),y2:P.Y(a),stroke:'var(--c2)','stroke-width':2.5,'stroke-dasharray':'8 6'},$('#m1G'));
+  txt($('#m1G'),`y = x${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]}`,P.X(xm*.55),P.Y(ym*.9),{fill:'var(--c1)','font-weight':700});txt($('#m1G'),`y = ${fmt(a)}`,610,P.Y(a)+(a>=0?-10:24),{'text-anchor':'end',fill:'var(--c2)','font-weight':700});
+  let roots=[];if(Math.abs(a)<1e-9)roots=[0];else if(a>0)roots=n%2?[Math.pow(a,1/n)]:[-Math.pow(a,1/n),Math.pow(a,1/n)];else if(n%2)roots=[-Math.pow(-a,1/n)];
+  roots.forEach(r=>{el('line',{x1:P.X(r),x2:P.X(r),y1:P.Y(a),y2:P.Y(0),stroke:'var(--c4)','stroke-dasharray':'4 4','stroke-width':2},$('#m1G'));el('circle',{cx:P.X(r),cy:P.Y(a),r:7,fill:'var(--c4)'},$('#m1G'));el('circle',{cx:P.X(r),cy:P.Y(0),r:6,fill:'var(--c4)'},$('#m1G'));});
+  const ex=exactRoot(Math.abs(a),n);const rt=ex?ex:fmt(Math.pow(Math.abs(a),1/n));const par=n%2?L('нечётное','тақ'):L('чётное','жұп');
+  let msg;if(Math.abs(a)<1e-9)msg=L('Один корень: x = 0.','Бір түбір: x = 0.');else if(a>0)msg=n%2?L(`n — ${par}, a &gt; 0: один корень x = ${rad(n,fmt(a))} = ${rt}.`,`n — ${par}, a &gt; 0: бір түбір x = ${rad(n,fmt(a))} = ${rt}.`):L(`n — ${par}, a &gt; 0: два корня x = ±${rad(n,fmt(a))} = ±${rt}.`,`n — ${par}, a &gt; 0: екі түбір x = ±${rad(n,fmt(a))} = ±${rt}.`);
+  else msg=n%2?L(`n — ${par}, a &lt; 0: один корень x = ${rad(n,fmt(a))} = −${rad(n,fmt(-a))} = −${rt}.`,`n — ${par}, a &lt; 0: бір түбір x = ${rad(n,fmt(a))} = −${rad(n,fmt(-a))} = −${rt}.`):L(`n — ${par}, a &lt; 0: корней нет — график y = xⁿ лежит не ниже оси Ox, прямая y = a его не пересекает.`,`n — ${par}, a &lt; 0: түбір жоқ — y = xⁿ графигі Ox осінен төмен түспейді, y = a түзуі оны қимайды.`);
+  $('#m1Eq').innerHTML=`x${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${fmt(a)}`;$('#m1Msg').innerHTML=msg;}
+$('#m1n').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;MD.n=+b.dataset.n;drawM1();});
+$('#m1a').addEventListener('input',e=>{MD.a=+e.target.value;drawM1();});
+document.querySelectorAll('[data-m1a]').forEach(b=>b.addEventListener('click',()=>{MD.a=+b.dataset.m1a;drawM1();}));
+function drawM2(){$('#m2n').innerHTML=[2,3,4,5,6].map((k,i)=>`<button data-n="${k}" aria-pressed="${MD.show.includes(k)}" class="chip" style="${MD.show.includes(k)?`background:${COLS[i]};border-color:${COLS[i]};color:#fff`:''}">${rad(k,'x')}</button>`).join('');
+  const sym=$('#m2s').checked;const P=fplot($('#m2G'),{x0:-6.5,x1:9.5,y0:-3.2,y1:6.5,W:620,H:400,sx:1,lx:2});
+  if(sym)el('line',{x1:P.X(-3.2),y1:P.Y(-3.2),x2:P.X(6.5),y2:P.Y(6.5),stroke:'var(--muted)','stroke-dasharray':'6 5'},$('#m2G'));
+  MD.show.forEach(k=>{const c=COLS[[2,3,4,5,6].indexOf(k)];P.curve(x=>nroot(x,k),-6.5,9.5,{stroke:c,'stroke-width':3.5});if(sym)P.curve(x=>Math.pow(x,k),k%2?-6.5:0,9.5,{stroke:c,'stroke-width':2,'stroke-dasharray':'6 5',opacity:.7});});
+  [[1,1],[0,0]].forEach(([x,y])=>el('circle',{cx:P.X(x),cy:P.Y(y),r:5,fill:'var(--ink)'},$('#m2G')));txt($('#m2G'),'(1; 1)',P.X(1)+8,P.Y(1)-8,{'font-size':16});
+  $('#m2Msg').innerHTML=L('Все графики проходят через точки (0; 0) и (1; 1). Функция y = ⁿ√x возрастает. Для чётного n она определена при x ≥ 0, для нечётного — при всех x (график симметричен относительно начала координат). При x &gt; 1 чем больше n, тем ниже график. График y = ⁿ√x (x ≥ 0) симметричен графику y = xⁿ относительно прямой y = x.','Барлық графиктер (0; 0) және (1; 1) нүктелері арқылы өтеді. y = ⁿ√x функциясы өспелі. Жұп n үшін ол x ≥ 0 болғанда, тақ n үшін — барлық x үшін анықталған (графигі координаталар басына қатысты симметриялы). x &gt; 1 болғанда n неғұрлым үлкен болса, график соғұрлым төмен. y = ⁿ√x (x ≥ 0) графигі y = xⁿ графигіне y = x түзуіне қатысты симметриялы.');}
+$('#m2n').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=+b.dataset.n;MD.show=MD.show.includes(k)?MD.show.filter(x=>x!==k):[...MD.show,k].sort();drawM2();});
+$('#m2s').addEventListener('change',drawM2);
+function drawM3(){const{m,d,b}=MD;$('#m3m').value=m;$('#m3d').value=d;$('#m3b').value=b;$('#m3mv').textContent=neg(m);$('#m3dv').textContent=d;$('#m3bv').textContent=fmt(b);
+  const r=m/d,val=Math.pow(b,r);const[p,q]=Q(m,d);
+  const ebH=q===1?neg(p):neg(p)+'/'+q;const intB=Math.abs(b-Math.round(b))<1e-9;
+  const steps=[];steps.push(`${pw(fmt(b),neg(m)+'/'+d)}${p!==m?` = ${pw(fmt(b),ebH)}`:''}`);
+  if(q>1){const inner=p<0?frac(1,rad(q,pw(fmt(b),-p))):rad(q,pw(fmt(b),p));steps.push(`= ${inner}`);if(intB){const A=Math.pow(Math.round(b),Math.abs(p));if(A<1e7){const s=simp(q,A);const v=cRad(s.c,q,s.r);if(v!==rad(q,A))steps.push(`= ${p<0?frac(1,v):v}`);}}}
+  if(Math.abs(val-Math.round(val))>1e-9||q===1&&false)steps.push(`≈ ${fmt(val,5)}`);else if(!steps.join('').endsWith('= '+Math.round(val)))steps.push(`= ${Math.round(val)}`);
+  $('#m3Eq').innerHTML=steps.join(' ');
+  const yT=Math.max(4,Math.min(30,Math.pow(Math.max(b,1/b),3.2)*1.05)),st=yT>16?5:yT>8?2:1;const P=fplot($('#m3G'),{x0:-3.2,x1:3.2,y0:-yT*.12,y1:yT,W:620,H:380,sx:.5,lx:1,sy:st,ly:st});
+  const svg=$('#m3G');P.curve(x=>Math.pow(b,x),-3.2,3.2,{stroke:'var(--c1)','stroke-width':3});
+  for(let k=-3;k<=3;k++){const y=Math.pow(b,k);el('circle',{cx:P.X(k),cy:P.Y(y),r:4,fill:'var(--muted)'},svg);}
+  el('line',{x1:P.X(r),x2:P.X(r),y1:P.Y(0),y2:P.Y(val),stroke:'var(--c2)','stroke-dasharray':'5 4','stroke-width':2},svg);el('line',{x1:P.X(0),x2:P.X(r),y1:P.Y(val),y2:P.Y(val),stroke:'var(--c2)','stroke-dasharray':'5 4','stroke-width':2},svg);
+  el('circle',{cx:P.X(r),cy:P.Y(val),r:8,fill:'var(--c2)'},svg);txt(svg,`r = ${ebH}`,P.X(r),P.Y(0)+40,{'text-anchor':'middle',fill:'var(--c2)','font-weight':700,'font-size':17});
+  txt(svg,`y = ${fmt(b)}ˣ`,P.X(b>1?-3.1:1.6),P.Y(Math.pow(b,b>1?-3.1:1.6))-60,{fill:'var(--c1)','font-weight':700});
+  $('#m3Msg').innerHTML=Math.abs(b-1)<1e-9?L('При a = 1 любая степень равна 1.','a = 1 болғанда кез келген дәреже 1-ге тең.'):b>1?L('a &gt; 1: функция y = aˣ возрастает — бо́льшему показателю соответствует бо́льшая степень.','a &gt; 1: y = aˣ функциясы өспелі — үлкен көрсеткішке үлкен дәреже сәйкес келеді.'):L('0 &lt; a &lt; 1: функция y = aˣ убывает — бо́льшему показателю соответствует меньшая степень.','0 &lt; a &lt; 1: y = aˣ функциясы кемімелі — үлкен көрсеткішке кіші дәреже сәйкес келеді.');}
+['m3m','m3d','m3b'].forEach(id=>$('#'+id).addEventListener('input',e=>{MD[{m3m:'m',m3d:'d',m3b:'b'}[id]]=+e.target.value;drawM3();}));
+function drawModel(){drawM1();drawM2();drawM3();}
+
+/* ================= ГЕНЕРАТОРЫ ЗАДАНИЙ ================= */
+// каждый: {cat, q, a (html), w:[html], steps:[{why,mx}], av:число, wv:[числа]|null}
+const nn=n=>n===2?L('квадратный','квадрат'):n===3?L('кубический','куб'):`${n}-${L('й степени','ші дәрежелі')}`;
+function gRoot(){const n=pick([2,3,3,4,5,2,3,6]);const lim={2:15,3:10,4:5,5:4,6:3}[n];let b=ri(2,lim);let negA=n%2&&rnd()<.4;const kind=rnd();
+  if(kind<.2){const den=ri(2,Math.min(lim,5)),num=ri(1,den*2);const[p,q]=Q(num,den);if(q===1)return gRoot();const Ap=Math.pow(p,n),Aq=Math.pow(q,n);const sgn=negA?'−':'';
+    return{q:L(`Вычислите: ${rad(n,sgn+frac(Ap,Aq))}`,`Есептеңіз: ${rad(n,sgn+frac(Ap,Aq))}`),a:sgn+frac(p,q),w:[(negA?'':'−')+frac(p,q),sgn+frac(q,p),sgn+frac(Ap,q),sgn+frac(p*n,q*n+1)],av:(negA?-1:1)*p/q,wv:null,
+      steps:[{why:L('Корень из частного:','Бөліндінің түбірі:'),mx:`${rad(n,frac(Ap,Aq))} = ${frac(rad(n,Ap),rad(n,Aq))}`},{why:L(`Так как ${p}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${Ap} и ${q}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${Aq}:`,`${p}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${Ap} және ${q}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${Aq} болғандықтан:`),mx:`= ${frac(p,q)}`}].concat(negA?[{why:L('Нечётный показатель: знак минус выносится:','Тақ көрсеткіш: минус таңбасы шығарылады:'),mx:`${rad(n,'−'+frac(Ap,Aq))} = −${frac(p,q)}`}]:[])};}
+  if(kind<.35&&n<=3){const k=pick([1,2]);const d=Math.pow(10,k);const A=Math.pow(b,n)/Math.pow(d,n);const sgn=negA?'−':'';const Ah=fmt(A,10);
+    return{q:L(`Вычислите: ${rad(n,sgn+Ah)}`,`Есептеңіз: ${rad(n,sgn+Ah)}`),a:sgn+fmt(b/d),w:[(negA?'':'−')+fmt(b/d),sgn+fmt(b/d/10),sgn+fmt(b/d*10),sgn+fmt(A/n,6)],av:(negA?-1:1)*b/d,
+      steps:[{why:L('Подберём число, n-я степень которого равна подкоренному выражению:','n-ші дәрежесі түбір астындағы өрнекке тең санды табамыз:'),mx:`(${fmt(b/d)})${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${Ah}`},{why:L('Значит:','Демек:'),mx:`${rad(n,sgn+Ah)} = ${sgn}${fmt(b/d)}`}]};}
+  const A=Math.pow(b,n),sg=negA?-1:1;const Ah=neg(sg*A);
+  return{q:L(`Вычислите: ${rad(n,Ah)}`,`Есептеңіз: ${rad(n,Ah)}`),a:neg(sg*b),w:[neg(-sg*b),neg(sg*Math.round(A/n)),neg(sg*(b+1)),n%2?L('не существует','мағынасы жоқ'):neg(sg*b*b)],av:sg*b,
+    steps:[{why:L(`Ищем число, ${n}-я степень которого равна ${Ah}:`,`${n}-ші дәрежесі ${Ah}-ке тең санды іздейміз:`),mx:`${negA?'(−'+b+')':b}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${Ah}`},{why:negA?L('Для нечётного n корень из отрицательного числа существует и отрицателен:','Тақ n үшін теріс саннан түбір бар және ол теріс:'):L('Арифметический корень неотрицателен:','Арифметикалық түбір теріс емес:'),mx:`${rad(n,Ah)} = ${neg(sg*b)}`}]};}
+function gProp(){const t=pick(['mul','div','nest','pow','abs','mul']);
+  if(t==='mul'){const n=pick([2,3,3,4]);const b=ri(2,n===2?12:n===3?6:4);const T=Math.pow(b,n);const divs=[];for(let x=2;x<T;x++)if(T%x===0&&!isPow(x,n)&&!isPow(T/x,n))divs.push(x);if(!divs.length)return gProp();const x=pick(divs),y=T/x;
+    return{q:L(`Вычислите: ${rad(n,x)}·${rad(n,y)}`,`Есептеңіз: ${rad(n,x)}·${rad(n,y)}`),a:String(b),w:[rad(n,x+y),String(x*y),String(b*b),String(Math.round(Math.sqrt(x*y)*10)/10===b?b+1:b+1),cRad(1,n,x+y)],av:b,
+      steps:[{why:L('Произведение корней с одинаковым показателем равно корню из произведения:','Көрсеткіштері бірдей түбірлердің көбейтіндісі көбейтіндінің түбіріне тең:'),mx:`${rad(n,x)}·${rad(n,y)} = ${rad(n,x+'·'+y)} = ${rad(n,T)}`},{why:L('Извлекаем корень:','Түбірді табамыз:'),mx:`${rad(n,T)} = ${b}, ${L('так как','өйткені')} ${b}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${T}`}]};}
+  if(t==='div'){const n=pick([2,3,4]);const b=ri(2,n===2?9:n===3?5:3);const y=pick([2,3,5,6,7].filter(v=>!isPow(v,n)));const x=Math.pow(b,n)*y;
+    return{q:L(`Вычислите: ${frac(rad(n,x),rad(n,y))}`,`Есептеңіз: ${frac(rad(n,x),rad(n,y))}`),a:String(b),w:[rad(n,x-y),String(Math.pow(b,n)),String(b*y),String(b+1)],av:b,
+      steps:[{why:L('Частное корней равно корню из частного:','Түбірлердің бөліндісі бөліндінің түбіріне тең:'),mx:`${frac(rad(n,x),rad(n,y))} = ${rad(n,frac(x,y))} = ${rad(n,Math.pow(b,n))}`},{why:L('Извлекаем корень:','Түбірді табамыз:'),mx:`= ${b}`}]};}
+  if(t==='nest'){const[n,k]=pick([[2,3],[3,2],[2,2],[2,4],[3,3]]);const b=pick(n*k>=8?[2]:[2,3]);const A=Math.pow(b,n*k);
+    return{q:L(`Вычислите: ${rad(n,rad(k,A))}`,`Есептеңіз: ${rad(n,rad(k,A))}`),a:String(b),w:[String(Math.pow(b,2)),rad(n+k,A),String(b*2),String(Math.round(Math.pow(A,1/(n+k))*100)/100).replace('.',',')],av:b,
+      steps:[{why:L('Корень из корня: показатели перемножаются:','Түбірден түбір: көрсеткіштер көбейтіледі:'),mx:`${rad(n,rad(k,A))} = ${rad(n*k,A)}`},{why:L('Извлекаем корень:','Түбірді табамыз:'),mx:`${rad(n*k,A)} = ${b}, ${L('так как','өйткені')} ${b}<sup>${n*k}</sup> = ${A}`}]};}
+  if(t==='pow'){const n=pick([2,3,4]);const k=n*pick([2,3]);const x=pick([2,3,5]);const v=Math.pow(x,k/n);
+    return{q:L(`Вычислите: (${rad(n,x)})<sup>${k}</sup>`,`Есептеңіз: (${rad(n,x)})<sup>${k}</sup>`),a:String(v),w:[String(x*k),String(Math.pow(x,k)),String(Math.pow(x,k/n+1)),String(x*k/n)],av:v,
+      steps:[{why:L('Возведение корня в степень:','Түбірді дәрежеге шығару:'),mx:`(${rad(n,x)})<sup>${k}</sup> = ${rad(n,pw(x,k))} = ${pw(x,k+'/'+n)}`},{why:L('Сокращаем показатель:','Көрсеткішті қысқартамыз:'),mx:`= ${pw(x,k/n)} = ${v}`}]};}
+  const n=pick([2,4,6]),b=ri(2,n===2?9:3);const odd=rnd()<.3;const nn_=odd?3:n;
+  return{q:L(`Вычислите: ${rad(nn_,'(−'+b+')<sup>'+nn_+'</sup>')}`,`Есептеңіз: ${rad(nn_,'(−'+b+')<sup>'+nn_+'</sup>')}`),a:odd?'−'+b:String(b),w:[odd?String(b):'−'+b,L('не существует','мағынасы жоқ'),String(Math.pow(b,2)),'±'+b],av:odd?-b:b,
+    steps:[{why:odd?L('Для нечётного n: ⁿ√(aⁿ) = a:','Тақ n үшін: ⁿ√(aⁿ) = a:'):L('Для чётного n: ⁿ√(aⁿ) = |a|:','Жұп n үшін: ⁿ√(aⁿ) = |a|:'),mx:odd?`${rad(3,'(−'+b+')³')} = −${b}`:`${rad(n,'(−'+b+')<sup>'+n+'</sup>')} = |−${b}| = ${b}`}]};}
+const NR=n=>[2,3,5,6,7,10,11].filter(v=>!isPow(v,n));
+function gOut(){const n=pick([2,2,3,3,4]);const c=ri(2,n===2?7:n===3?4:3);const r=pick(NR(n).filter(v=>v<=(n===2?11:6)));const A=Math.pow(c,n)*r;const ans=cRad(c,n,r);
+  const w=[cRad(c*c,n,r),cRad(r,n,c),cRad(Math.pow(c,n),n,r),cRad(c,n,r*c),cRad(c+1,n,r),cRad(c-1||c+2,n,r+1)];
+  if(n===2&&c%2===0&&c>2)w.unshift(cRad(c/2,2,r*4));
+  return{q:L(`Вынесите множитель из-под знака корня: ${rad(n,A)}`,`Көбейткішті түбір белгісінің алдына шығарыңыз: ${rad(n,A)}`),a:ans,w,av:c*Math.pow(r,1/n),wv:null,
+    steps:[{why:L(`Разложим подкоренное выражение так, чтобы один множитель был ${n}-й степенью:`,`Түбір астындағы өрнекті бір көбейткіші ${n}-ші дәреже болатындай жіктейміз:`),mx:`${A} = ${Math.pow(c,n)}·${r} = ${c}${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]}·${r}`},{why:L('Корень из произведения:','Көбейтіндінің түбірі:'),mx:`${rad(n,A)} = ${rad(n,c+'<sup>'+n+'</sup>')}·${rad(n,r)} = ${ans}`}]};}
+function gIn(){const n=pick([2,3,3,2,4]);let c=ri(2,n===2?6:3);const r=pick(NR(n).filter(v=>v<=7));const negc=rnd()<.3;const cc=negc?-c:c;const A=Math.pow(c,n)*r;
+  let ans,w,steps;const lhs=cRad(cc,n,r);
+  if(negc&&n%2===0){ans='−'+rad(n,A);w=[rad(n,-A),rad(n,A),'−'+rad(n,c*r),rad(n,Math.pow(c,n)*r*-1).replace('−','')+'·(−1)'];
+    steps=[{why:L('Под знак корня чётной степени вносим только положительный множитель, минус остаётся перед корнем:','Жұп дәрежелі түбір белгісінің астына тек оң көбейткіш енгізіледі, минус түбірдің алдында қалады:'),mx:`${lhs} = −(${c}${rad(n,r)}) = −${rad(n,c+'<sup>'+n+'</sup>·'+r)} = −${rad(n,A)}`}];}
+  else{ans=rad(n,neg(cc>0?A:-A));w=[rad(n,neg(cc*r)),rad(n,neg((cc>0?1:-1)*c*c*r)),rad(n,neg(cc>0?-A:A)),rad(n,neg((cc>0?1:-1)*(Math.pow(c,n)+r)))];
+    steps=[{why:L(`Чтобы внести множитель под знак корня ${n}-й степени, его возводят в ${n}-ю степень:`,`Көбейткішті ${n}-ші дәрежелі түбір белгісінің астына енгізу үшін оны ${n}-ші дәрежеге шығарады:`),mx:`${lhs} = ${rad(n,'('+neg(cc)+')<sup>'+n+'</sup>·'+r)} = ${ans}`}];}
+  return{q:L(`Внесите множитель под знак корня: ${lhs}`,`Көбейткішті түбір белгісінің астына енгізіңіз: ${lhs}`),a:ans,w,av:cc*Math.pow(r,1/n),steps};}
+function gIrr(){const t=pick(['sq','sq','cb','conj']);
+  if(t==='sq'){const b=pick([2,3,5,6,7,10]);const a=pick([b,2*b,3*b,1,2,5].filter(x=>x!==0));const[p,q]=Q(a,b);const ans=q===1?cRad(p,2,b):frac(cRad(p,2,b),q);
+    return{q:L(`Освободитесь от иррациональности в знаменателе: ${frac(a,rad(2,b))}`,`Бөлімдегі иррационалдықтан арылыңыз: ${frac(a,rad(2,b))}`),a:ans,w:[q===1?cRad(p*b,2,b):frac(cRad(p*b,2,b),q),frac(cRad(a,2,b),b*b),cRad(1,2,a*b===b*b?a*b+1:a*b)+'',frac(a,b)],av:a/Math.sqrt(b),
+      steps:[{why:L(`Умножим числитель и знаменатель на ${rad(2,b)}:`,`Алым мен бөлімді ${rad(2,b)}-ге көбейтеміз:`),mx:`${frac(a,rad(2,b))} = ${frac(a+rad(2,b),rad(2,b)+'·'+rad(2,b))} = ${frac(a+rad(2,b),b)}`},{why:L('Сокращаем:','Қысқартамыз:'),mx:`= ${ans}`}]};}
+  if(t==='cb'){const b=pick([2,3,5]);const a=pick([b,2*b,1,3]);const b2=b*b;const[p,q]=Q(a,b);const ans=q===1?cRad(p,3,b2):frac(cRad(p,3,b2),q);
+    return{q:L(`Освободитесь от иррациональности в знаменателе: ${frac(a,rad(3,b))}`,`Бөлімдегі иррационалдықтан арылыңыз: ${frac(a,rad(3,b))}`),a:ans,w:[q===1?cRad(p,3,b):frac(cRad(p,3,b),q),frac(cRad(a,3,b),b),q===1?cRad(p,3,b2*b2):frac(cRad(p,3,b2*b2),q),frac(cRad(a,3,b2),b2)],av:a/Math.cbrt(b),
+      steps:[{why:L(`Чтобы под корнем в знаменателе получился куб, умножим числитель и знаменатель на ${rad(3,b+'²')}:`,`Бөлімдегі түбір астында куб шығуы үшін алым мен бөлімді ${rad(3,b+'²')}-ге көбейтеміз:`),mx:`${frac(a,rad(3,b))} = ${frac(a+rad(3,b2),rad(3,b)+'·'+rad(3,b2))} = ${frac(a+rad(3,b2),rad(3,b*b2))} = ${frac(a+rad(3,b2),b)}`},{why:L('Сокращаем:','Қысқартамыз:'),mx:`= ${ans}`}]};}
+  const[x,y]=pick([[5,3],[7,5],[6,2],[3,2],[7,3],[10,6],[11,7]]);const d=x-y;const sgn=rnd()<.5;const a=pick([d,2*d,d/ gcd(d,2)].filter(v=>Number.isInteger(v)));
+  const den=sgn?`${rad(2,x)} − ${rad(2,y)}`:`${rad(2,x)} + ${rad(2,y)}`;const conj=sgn?`${rad(2,x)} + ${rad(2,y)}`:`${rad(2,x)} − ${rad(2,y)}`;const[p,q]=Q(a,d);
+  const ans=(q===1?(p===1?'':p):'')+(q===1&&p===1?conj:`(${conj})`)+(q===1?'':'');const ansH=q===1?(p===1?conj:`${p}(${conj})`):frac(`${p===1?'':p}(${conj})`,q);
+  const wcon=sgn?`${rad(2,x)} − ${rad(2,y)}`:`${rad(2,x)} + ${rad(2,y)}`;
+  return{q:L(`Освободитесь от иррациональности в знаменателе: ${frac(a,den)}`,`Бөлімдегі иррационалдықтан арылыңыз: ${frac(a,den)}`),a:ansH,w:[q===1?(p===1?wcon:`${p}(${wcon})`):frac(`${p===1?'':p}(${wcon})`,q),frac(`${a}(${conj})`,x+y),frac(`${a}(${conj})`,d*d),`${a}(${conj})`],av:a/(Math.sqrt(x)+(sgn?-1:1)*Math.sqrt(y)),
+    steps:[{why:L(`Умножим числитель и знаменатель на сопряжённое выражение ${conj}:`,`Алым мен бөлімді түйіндес ${conj} өрнегіне көбейтеміз:`),mx:`${frac(a,den)} = ${frac(`${a}(${conj})`,`(${den})(${conj})`)}`},{why:L('В знаменателе — разность квадратов:','Бөлімде — квадраттар айырмасы:'),mx:`(${den})(${conj}) = ${x} − ${y} = ${d}`},{why:L('Получаем:','Шығады:'),mx:`${frac(`${a}(${conj})`,d)} = ${ansH}`}]};}
+function gPow(){const n=pick([2,3,3,4,5,2]);const b=ri(2,{2:9,3:5,4:3,5:2}[n]);let m=pick([1,2,3,-1,-2,-3,1,2].filter(v=>gcd(v,n)===1));const B=Math.pow(b,n);const kind=rnd();
+  let baseH=String(B),bb=b;if(kind<.25){baseH=frac(1,B);bb=1/b;}
+  let expH=neg(m)+'/'+n;if(rnd()<.3&&[2,4,5].includes(n)){expH=fmt(m/n);}
+  const val=Math.pow(bb,m);const ansR=m>=0?(bb>=1?[Math.pow(b,m),1]:[1,Math.pow(b,m)]):(bb>=1?[1,Math.pow(b,-m)]:[Math.pow(b,-m),1]);const ans=rH(ansR);
+  const wr=[rH(Q(ansR[1],ansR[0])),rH(Q(-ansR[0],ansR[1])),rH(Q(ansR[0]*2,ansR[1])),neg(rH([B*m,n])),rH([Math.pow(b,Math.abs(m))*(m<0?-1:1),1]),rH([ansR[0]*b,ansR[1]])];
+  const bH=kind<.25?`(${baseH})`:baseH;
+  return{q:L(`Вычислите: ${pw(bH,expH)}`,`Есептеңіз: ${pw(bH,expH)}`),a:ans,w:wr,av:val,
+    steps:[{why:L('По определению степени с рациональным показателем:','Рационал көрсеткішті дәреженің анықтамасы бойынша:'),mx:`${pw(bH,expH)} = ${pw(bH,neg(m)+'/'+n)} = (${rad(n,kind<.25?frac(1,B):B)})<sup>${neg(m)}</sup>`},{why:L('Извлекаем корень:','Түбірді табамыз:'),mx:`${rad(n,kind<.25?frac(1,B):B)} = ${kind<.25?frac(1,b):b}`},{why:m<0?L('Отрицательный показатель: a⁻ᵏ = 1/aᵏ:','Теріс көрсеткіш: a⁻ᵏ = 1/aᵏ:'):L('Возводим в степень:','Дәрежеге шығарамыз:'),mx:`(${kind<.25?frac(1,b):b})<sup>${neg(m)}</sup> = ${ans}`}]};}
+function gConv(){const v=pick(['x','a','b','y']);const n=pick([3,4,5,7]);let m=pick([1,2,3,4,5,-1,-2,-3].filter(k=>gcd(k,n)===1&&Math.abs(k)<n+2));
+  if(rnd()<.5){const lhs=m>0?rad(n,pw(v,m===1?'':m)).replace('<sup></sup>',''):frac(1,rad(n,pw(v,-m===1?'':-m).replace('<sup></sup>','')));const ans=pw(v,neg(m)+'/'+n);
+    return{q:L(`Представьте в виде степени с рациональным показателем (${v} &gt; 0): ${lhs}`,`Рационал көрсеткішті дәреже түрінде жазыңыз (${v} &gt; 0): ${lhs}`),a:ans,w:[pw(v,n+'/'+neg(m)),pw(v,neg(-m)+'/'+n),pw(v,neg(m*n)),pw(v,neg(m-n))],av:null,steps:[{why:L('По определению:','Анықтама бойынша:'),mx:`${rad('n',pw(v,'m'))} = ${pw(v,'m/n')}, ${frac(1,pw(v,'k'))} = ${pw(v,'−k')}`},{why:L('Получаем:','Шығады:'),mx:`${lhs} = ${ans}`}]};}
+  const lhs=pw(v,neg(m)+'/'+n);const pos=m>0;const R=rad(n,Math.abs(m)===1?v:pw(v,Math.abs(m)));const ans=pos?R:frac(1,R);
+  return{q:L(`Запишите в виде корня (${v} &gt; 0): ${lhs}`,`Түбір түрінде жазыңыз (${v} &gt; 0): ${lhs}`),a:ans,w:[pos?frac(1,R):'−'+R,rad(Math.abs(m),pw(v,n)),pos?rad(n,pw(v,Math.abs(m)*2)):'−'+rad(n,pw(v,Math.abs(m))),pw(rad(n,v),neg(-m))].map(s=>s.replace('<sup>1</sup>','')),av:null,steps:[{why:L('По определению:','Анықтама бойынша:'),mx:`${pw(v,'m/n')} = ${rad('n',pw(v,'m'))}${pos?'':`, ${pw(v,'−k')} = ${frac(1,pw(v,'k'))}`}`},{why:L('Получаем:','Шығады:'),mx:`${lhs} = ${ans}`}]};}
+function gSimp(){const t=pick(['mul','div','pp','lit','lit','prod']);
+  if(t==='mul'){const b=pick([2,3,5,7]);const n=pick([2,3,4,5]);let p=ri(1,2*n-1);if(p%n===0)p++;const qq=(Math.ceil((p+1)/n)*n)-p;const s=(p+qq)/n;const P1=Q(p,n),P2=Q(qq,n);
+    return{q:L(`Вычислите: ${pw(b,rS(P1))}·${pw(b,rS(P2))}`,`Есептеңіз: ${pw(b,rS(P1))}·${pw(b,rS(P2))}`),a:String(Math.pow(b,s)),w:[String(Math.pow(b*b,s)),String(Math.pow(b,Math.round(rV(P1)*rV(P2)*100)/100)).replace('.',','),String(b*s),String(Math.pow(b,s+1))],av:Math.pow(b,s),
+      steps:[{why:L('При умножении степеней с одинаковым основанием показатели складываются:','Негіздері бірдей дәрежелерді көбейткенде көрсеткіштер қосылады:'),mx:`${pw(b,rS(P1))}·${pw(b,rS(P2))} = ${pw(b,rS(P1)+' + '+rS(P2))} = ${pw(b,s)} = ${Math.pow(b,s)}`}]};}
+  if(t==='div'){const b=pick([2,3,4,5]);const n=pick([2,3,4]);const k=ri(1,2);const q=pick([1,2,3,5].filter(v=>gcd(v,n)===1));const p=q+k*n;const P1=Q(p,n),P2=Q(q,n);
+    return{q:L(`Вычислите: ${pw(b,rS(P1))} : ${pw(b,rS(P2))}`,`Есептеңіз: ${pw(b,rS(P1))} : ${pw(b,rS(P2))}`),a:String(Math.pow(b,k)),w:[String(Math.pow(b,(p+q)/n)).replace('.',','),String(Math.pow(b,Math.max(1,Math.round(p/q)))),String(b*k+1),String(Math.pow(b,k+1))],av:Math.pow(b,k),
+      steps:[{why:L('При делении степеней показатели вычитаются:','Дәрежелерді бөлгенде көрсеткіштер азайтылады:'),mx:`${pw(b,rS(P1))} : ${pw(b,rS(P2))} = ${pw(b,rS(P1)+' − '+rS(P2))} = ${pw(b,k)} = ${Math.pow(b,k)}`}]};}
+  if(t==='pp'){const b=pick([2,3,5,7,8,9]);const[p,q]=pick([[[2,3],[3,2]],[[3,4],[4,3]],[[1,2],[4,1]],[[2,5],[5,2]],[[4,3],[3,2]],[[3,2],[2,3]]]);const s=Q(p[0]*q[0],p[1]*q[1]);const v=Math.pow(b,rV(s));
+    if(!Number.isInteger(Math.round(v*1e6)/1e6))return gSimp();
+    return{q:L(`Вычислите: (${pw(b,rS(p))})<sup>${rS(q)}</sup>`,`Есептеңіз: (${pw(b,rS(p))})<sup>${rS(q)}</sup>`),a:String(Math.round(v)),w:[fmt(Math.pow(b,rV(p)+rV(q)),4),String(b*Math.round(rV(s)*10)/10).replace('.',','),String(Math.round(v)*b),String(Math.max(1,Math.round(v)-1))],av:v,
+      steps:[{why:L('При возведении степени в степень показатели перемножаются:','Дәрежені дәрежеге шығарғанда көрсеткіштер көбейтіледі:'),mx:`(${pw(b,rS(p))})<sup>${rS(q)}</sup> = ${pw(b,rS(p)+'·'+rS(q))} = ${pw(b,rS(s))} = ${Math.round(v)}`}]};}
+  if(t==='prod'){const[x,y,n]=pick([[2,8,2],[3,27,2],[2,32,2],[4,16,3],[2,4,3],[3,9,3],[9,27,5],[2,8,4],[5,125,4]]);const T=x*y;const v=Math.pow(T,1/n);if(Math.abs(v-Math.round(v))>1e-9)return gSimp();
+    return{q:L(`Вычислите: ${pw(x,'1/'+n)}·${pw(y,'1/'+n)}`,`Есептеңіз: ${pw(x,'1/'+n)}·${pw(y,'1/'+n)}`),a:String(Math.round(v)),w:[pw(x+y,'1/'+n),String(Math.round(v)*2),String(T),String(Math.round(v)+1)],av:v,
+      steps:[{why:L('Степень произведения: (ab)ᵖ = aᵖbᵖ, читаем справа налево:','Көбейтіндінің дәрежесі: (ab)ᵖ = aᵖbᵖ, оңнан солға оқимыз:'),mx:`${pw(x,'1/'+n)}·${pw(y,'1/'+n)} = ${pw('('+x+'·'+y+')','1/'+n)} = ${pw(T,'1/'+n)} = ${rad(n,T)} = ${Math.round(v)}`}]};}
+  const v=pick(['a','x','b']);const ps=[[1,2],[1,3],[2,3],[3,4],[1,4],[5,6],[1,6],[3,2]];const p=pick(ps),q=pick(ps);const op=pick(['·',':']);const s=op==='·'?Q(p[0]*q[1]+q[0]*p[1],p[1]*q[1]):Q(p[0]*q[1]-q[0]*p[1],p[1]*q[1]);if(s[0]===0)return gSimp();
+  const prod=Q(p[0]*q[0],p[1]*q[1]);const wrong2=op==='·'?Q(p[0]*q[1]-q[0]*p[1],p[1]*q[1]):Q(p[0]*q[1]+q[0]*p[1],p[1]*q[1]);const w3=Q(p[0]+q[0],p[1]+q[1]);
+  const pv=r=>r[0]===0?'1':(r[0]===r[1]?v:pw(v,rS(r)));
+  return{q:L(`Упростите (${v} &gt; 0): ${pw(v,rS(p))} ${op} ${pw(v,rS(q))}`,`Ықшамдаңыз (${v} &gt; 0): ${pw(v,rS(p))} ${op} ${pw(v,rS(q))}`),a:pv(s),w:[pv(prod),pv(wrong2),pv(w3),pv(Q(s[0]+s[1],s[1])),pv(Q(-s[0],s[1])),pv(Q(s[0],s[1]*2))],av:null,
+    steps:[{why:op==='·'?L('Показатели складываются:','Көрсеткіштер қосылады:'):L('Показатели вычитаются:','Көрсеткіштер азайтылады:'),mx:`${pw(v,rS(p))} ${op} ${pw(v,rS(q))} = ${pw(v,rS(p)+(op==='·'?' + ':' − ')+rS(q))} = ${pv(s)}`}]};}
+function gCmp(){const t=rnd();let A,B,Ah,Bh,steps;
+  if(t<.55){for(let it=0;it<40;it++){const n=pick([2,3,4]),m=pick([2,3,4,6].filter(k=>k!==n));const x=ri(2,20),y=ri(2,20);const Lc=lcm(n,m);const X=Math.pow(x,Lc/n),Y=Math.pow(y,Lc/m);if(X===Y||X>1e7||Y>1e7)continue;if(isPow(x,n)||isPow(y,m))continue;
+      A=Math.pow(x,1/n);B=Math.pow(y,1/m);Ah=rad(n,x);Bh=rad(m,y);steps=[{why:L(`Приведём корни к общему показателю ${Lc}:`,`Түбірлерді ортақ ${Lc} көрсеткішке келтіреміз:`),mx:`${Ah} = ${rad(Lc,pw(x,Lc/n))} = ${rad(Lc,X)}; &nbsp; ${Bh} = ${rad(Lc,pw(y,Lc/m))} = ${rad(Lc,Y)}`},{why:L('Сравниваем подкоренные выражения:','Түбір астындағы өрнектерді салыстырамыз:'),mx:`${X} ${X<Y?'&lt;':'&gt;'} ${Y} ⇒ ${Ah} ${X<Y?'&lt;':'&gt;'} ${Bh}`}];break;}}
+  else{const b=pick([2,3,5,0.5,0.3,0.7,'2/3','3/4']);const bv=typeof b==='string'?(+b.split('/')[0])/(+b.split('/')[1]):b;const bh=typeof b==='string'?frac(...b.split('/')):fmt(b);const ps=[[1,2],[1,3],[2,3],[3,4],[2,5],[-1,2],[-1,3],[3,2]];let p=pick(ps),q=pick(ps);while(rV(p)===rV(q))q=pick(ps);
+    A=Math.pow(bv,rV(p));B=Math.pow(bv,rV(q));const bH=typeof b==='string'||bv<1?`(${bh})`:bh;Ah=pw(bH,rS(p));Bh=pw(bH,rS(q));const inc=bv>1;
+    steps=[{why:inc?L('Основание больше 1: большему показателю соответствует большая степень.','Негіз 1-ден үлкен: үлкен көрсеткішке үлкен дәреже сәйкес.'):L('Основание между 0 и 1: большему показателю соответствует меньшая степень.','Негіз 0 мен 1 арасында: үлкен көрсеткішке кіші дәреже сәйкес.'),mx:`${rS(p)} ${rV(p)<rV(q)?'&lt;':'&gt;'} ${rS(q)} ⇒ ${Ah} ${A<B?'&lt;':'&gt;'} ${Bh}`}];}
+  const rel=A<B?'&lt;':'&gt;',other=A<B?'&gt;':'&lt;';
+  return{q:L(`Сравните числа: ${Ah} и ${Bh}`,`Сандарды салыстырыңыз: ${Ah} және ${Bh}`),a:`${Ah} ${rel} ${Bh}`,w:[`${Ah} ${other} ${Bh}`,`${Ah} = ${Bh}`,L('сравнить нельзя','салыстыруға болмайды')],av:null,steps};}
+function gEq(){const n=pick([2,3,4,5,6,3,4]);const b=ri(1,{2:9,3:5,4:3,5:2,6:2}[n]);const sgn=pick([1,-1,1]);const zero=rnd()<.07;const A=zero?0:sgn*Math.pow(b,n);const eq=`x${'⁰¹²³⁴⁵⁶⁷⁸⁹'[n]} = ${neg(A)}`;
+  let ans,w,why;const none=L('корней нет','түбірі жоқ');
+  if(A===0){ans='x = 0';w=['x = ±1',none,'x = 1'];why=L('Единственный корень — нуль.','Жалғыз түбір — нөл.');}
+  else if(n%2===0){if(A>0){ans=`x = ±${b}`;w=[`x = ${b}`,`x = −${b}`,none,`x = ±${Math.round(A/n)}`];why=L(`n — чётное, a &gt; 0: два корня x = ±${rad(n,A)} = ±${b}.`,`n — жұп, a &gt; 0: екі түбір x = ±${rad(n,A)} = ±${b}.`);}
+    else{ans=none;w=[`x = −${b}`,`x = ±${b}`,`x = ${b}`];why=L(`n — чётное, a &lt; 0: xⁿ ≥ 0, поэтому корней нет.`,`n — жұп, a &lt; 0: xⁿ ≥ 0, сондықтан түбір жоқ.`);}}
+  else{ans=`x = ${neg(sgn*b)}`;w=[`x = ±${b}`,`x = ${neg(-sgn*b)}`,none,`x = ${neg(sgn*Math.round(A/n))}`];why=L(`n — нечётное: единственный корень x = ${rad(n,neg(A))} = ${neg(sgn*b)}.`,`n — тақ: жалғыз түбір x = ${rad(n,neg(A))} = ${neg(sgn*b)}.`);}
+  return{q:L(`Решите уравнение: ${eq}`,`Теңдеуді шешіңіз: ${eq}`),a:ans,w,av:null,steps:[{why:L('Сравниваем с таблицей: чётность n и знак a:','Кестемен салыстырамыз: n-нің жұп/тақтығы және a-ның таңбасы:'),mx:why}]};}
+const GENS={book:gBook,root:gRoot,prop:gProp,out:gOut,in:gIn,irr:gIrr,pow:gPow,conv:gConv,simp:gSimp,cmp:gCmp,eq:gEq};
+const GN=()=>({book:L('Упражнения учебника (§5–6)','Оқулық жаттығулары (§5–6)'),root:L('Вычислить корень','Түбірді есептеу'),prop:L('Свойства корней','Түбір қасиеттері'),out:L('Вынести множитель','Көбейткішті шығару'),in:L('Внести множитель','Көбейткішті енгізу'),irr:L('Иррациональность в знаменателе','Бөлімдегі иррационалдық'),eq:L('Уравнение xⁿ = a','xⁿ = a теңдеуі'),pow:L('Вычислить a<sup>m/n</sup>','a<sup>m/n</sup> есептеу'),conv:L('Корень ↔ степень','Түбір ↔ дәреже'),simp:L('Свойства степеней','Дәреже қасиеттері'),cmp:L('Сравнение чисел','Сандарды салыстыру')});
+function optList(T){const seen=new Set([strip(T.a)]);const w=[];const ex=T.av!=null&&Math.abs(T.av-Math.round(T.av))<1e-9?[T.av+1,T.av*2,T.av-1,T.av+2,T.av*3].map(v=>neg(Math.round(v))):[];for(const x of T.w.concat(ex)){const s=strip(String(x));if(!seen.has(s)&&!/NaN|undefined|Infinity/.test(s)){seen.add(s);w.push(x);}if(w.length===3)break;}return w;}
+
+/* ================= РЕШАТЕЛЬ ================= */
+let TEACH=false;try{TEACH=localStorage.getItem('rtn-teach')==='1';}catch(e){}
+document.addEventListener('change',e=>{if(e.target.classList&&e.target.classList.contains('teach')){TEACH=e.target.checked;try{localStorage.setItem('rtn-teach',TEACH?'1':'0');}catch(_){}document.querySelectorAll('.teach').forEach(c=>c.checked=TEACH);drawSolve();}});
+const S={gen:'book',seed:1,shown:0,ans:false,picks:[]};
+const LET='АБВГ';
+function drawSolve(){const T=withSeed(S.seed,()=>GENS[S.gen]());const opts=withSeed(S.seed+7,()=>shuffle([{h:T.a,ok:1},...optList(T).map(h=>({h,ok:0}))]));
+  $('#sGen').innerHTML=Object.entries(GN()).map(([k,n])=>`<button data-g="${k}" aria-pressed="${S.gen===k}">${n}</button>`).join('');
+  $('#sEq').innerHTML=T.q;document.querySelectorAll('.teach').forEach(c=>c.checked=TEACH);
+  const N=T.steps.length,n=TEACH?N:Math.min(S.shown,N),ansOn=TEACH||S.ans||n>=N;
+  $('#sWork').innerHTML=L('Место для решения: включите ручку ✎ (справа внизу) и решайте прямо здесь. Затем выберите ответ ниже.','Шешуге арналған орын: қаламды ✎ (оң жақ төменде) қосып, осы жерде шешіңіз. Содан кейін төменнен жауапты таңдаңыз.');
+  const solved=S.picks.some(i=>opts[i]&&opts[i].ok),last=S.picks[S.picks.length-1];
+  $('#sCheck').innerHTML=TEACH?'':`<span class="lbl">${L('Проверьте себя: какой ответ у вас получился?','Өзіңізді тексеріңіз: қандай жауап шықты?')}</span><div class="opts">`+opts.map((o,i)=>`<button class="opt ${S.picks.includes(i)?(o.ok?'right':'wrong'):''}" data-o="${i}" ${solved?'disabled':''}><span class="k">${LET[i]}</span><span class="m">${o.h}</span></button>`).join('')+'</div>'+
+    (last===undefined?'':solved?`<div class="fb ok">${L('Верно! Сравните своё решение с решением по шагам.','Дұрыс! Шешіміңізді қадамдық шешіммен салыстырыңыз.')}</div>`:`<div class="fb bad">${L('Неверно. Проверьте вычисления и попробуйте ещё раз — или откройте подсказку.','Қате. Есептеулерді тексеріп, қайталап көріңіз — немесе кеңесті ашыңыз.')}</div>`);
+  $('#sSteps').innerHTML=T.steps.slice(0,n).map(s=>`<li><div><span class="why">${s.why}</span><span class="mx">${s.mx}</span></div></li>`).join('');
+  $('#sAns').innerHTML=ansOn?`<div class="answer" style="margin-top:12px">${L('Ответ','Жауабы')}: ${T.a}</div>`:'';
+  $('#sCtl').innerHTML=TEACH?'':`<button class="btn" data-c="next" ${n>=N?'disabled':''}>${L('Подсказка: следующий шаг','Кеңес: келесі қадам')} (${Math.min(n+1,N)}/${N})</button>`+(ansOn?'':`<button class="btn ghost" data-c="ans">${L('Показать ответ','Жауапты көрсету')}</button>`)+(n<N?`<button class="btn ghost" data-c="all">${L('Всё решение','Толық шешім')}</button>`:'')+`<button class="btn ghost" data-c="new">${L('Новое задание','Жаңа тапсырма')}</button>`;}
+function resetS(){S.shown=0;S.ans=false;S.picks=[];}
+$('#sGen').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.gen=b.dataset.g;S.seed=newSeed();resetS();drawSolve();});
+$('#sCtl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const c=b.dataset.c;if(c==='next')S.shown++;else if(c==='ans')S.ans=true;else if(c==='all'){S.shown=99;S.ans=true;}else if(c==='new'){S.seed=newSeed();resetS();}drawSolve();});
+$('#sCheck').addEventListener('click',e=>{const b=e.target.closest('button[data-o]');if(!b||b.disabled)return;const i=+b.dataset.o;if(!S.picks.includes(i))S.picks.push(i);drawSolve();});
+
+/* ================= БАНК ЗАДАНИЙ ================= */
+const CATN=()=>({root:L('Корни','Түбірлер'),prop:L('Преобразования','Түрлендірулер'),pow:L('Рациональный показатель','Рационал көрсеткіш'),th:L('Теория','Теория')});
+function mkQ(cat,q,correct,wrongs,ex){const seen=new Set([strip(String(correct))]);const w=[];for(const x of wrongs){const t=strip(String(x));if(!seen.has(t)&&!/NaN|undefined|Infinity/.test(t)){seen.add(t);w.push(x);}if(w.length===3)break;}
+  const opts=shuffle([correct,...w]);return{cat:CATN()[cat],q,opts,ans:opts.indexOf(correct),ex};}
+const fromGen=(cat,keys)=>{const T=GENS[pick(keys)]();return mkQ(cat,T.q,M_(T.a),optList(T).map(M_),T.steps.map(s=>M_(s.mx)).join('<br>'));};
+const THQ=()=>[
+  [L('Что называется корнем n-й степени из числа a?','a санының n-ші дәрежелі түбірі деп нені айтады?'),L('число, n-я степень которого равна a','n-ші дәрежесі a-ға тең санды'),[L('число, которое в n раз меньше a','a-дан n есе кіші санды'),L('число aⁿ','aⁿ санын'),L('число a/n','a/n санын')],L('ⁿ√a = b ⇔ bⁿ = a.','ⁿ√a = b ⇔ bⁿ = a.')],
+  [L('При каких a выражение ⁴√a имеет смысл?','a-ның қандай мәндерінде ⁴√a өрнегінің мағынасы бар?'),'a ≥ 0',['a &gt; 0',L('при любых a','кез келген a үшін'),'a ≤ 0'],L('Корень чётной степени из отрицательного числа не существует.','Теріс саннан жұп дәрежелі түбір болмайды.')],
+  [L('При каких a выражение ∛a имеет смысл?','a-ның қандай мәндерінде ∛a өрнегінің мағынасы бар?'),L('при любых a','кез келген a үшін'),['a ≥ 0','a &gt; 0','a ≠ 0'],L('Корень нечётной степени существует из любого числа.','Тақ дәрежелі түбір кез келген саннан болады.')],
+  [L('Сколько корней имеет уравнение x⁶ = 5?','x⁶ = 5 теңдеуінің неше түбірі бар?'),L('два','екі'),[L('один','бір'),L('ни одного','бірде-біреуі жоқ'),L('шесть','алты')],'x = ±⁶√5'],
+  [L('Сколько корней имеет уравнение x⁵ = −7?','x⁵ = −7 теңдеуінің неше түбірі бар?'),L('один','бір'),[L('два','екі'),L('ни одного','бірде-біреуі жоқ'),L('пять','бес')],'x = ⁵√(−7) = −⁵√7'],
+  [L('Чему равно ⁿ√(aⁿ) при чётном n?','Жұп n болғанда ⁿ√(aⁿ) неге тең?'),'|a|',['a','−a','aⁿ'],L('Например, √((−5)²) = |−5| = 5.','Мысалы, √((−5)²) = |−5| = 5.')],
+  [L('Какое равенство верно (a ≥ 0)?','Қай теңдік дұрыс (a ≥ 0)?'),M_(`${rad(3,rad(2,'a'))} = ${rad(6,'a')}`),[M_(`${rad(3,rad(2,'a'))} = ${rad(5,'a')}`),M_(`${rad(3,'a')}·${rad(2,'a')} = ${rad(6,'a')}`),M_(`${rad(3,'a')} + ${rad(3,'a')} = ${rad(3,'2a')}`)],L('Корень из корня: показатели перемножаются.','Түбірден түбір: көрсеткіштер көбейтіледі.')],
+  [L('Чему равно a<sup>m/n</sup> по определению (a &gt; 0)?','Анықтама бойынша a<sup>m/n</sup> неге тең (a &gt; 0)?'),M_(rad('n',pw('a','m'))),[M_(rad('m',pw('a','n'))),M_('a·m/n'),M_(pw('a','m')+'/n')],L('Знаменатель показателя — показатель корня.','Көрсеткіштің бөлімі — түбір көрсеткіші.')],
+  [L('Почему в определении a<sup>m/n</sup> требуют a &gt; 0?','Неліктен a<sup>m/n</sup> анықтамасында a &gt; 0 талап етіледі?'),L('иначе значение зависело бы от записи дроби: (−8)<sup>1/3</sup> ≠ (−8)<sup>2/6</sup>','әйтпесе мән бөлшектің жазылуына тәуелді болар еді: (−8)<sup>1/3</sup> ≠ (−8)<sup>2/6</sup>'),[L('так принято только для удобства','бұл тек ыңғайлылық үшін қабылданған'),L('из отрицательных чисел корней не бывает','теріс сандардан түбір болмайды'),L('при a &lt; 0 степень всегда равна нулю','a &lt; 0 болғанда дәреже әрқашан нөлге тең')],L('∛(−8) = −2, но ⁶√((−8)²) = 2.','∛(−8) = −2, бірақ ⁶√((−8)²) = 2.')],
+  [L('Какое из чисел больше: 0,5<sup>1/3</sup> или 0,5<sup>1/2</sup>?','Қай сан үлкен: 0,5<sup>1/3</sup> немесе 0,5<sup>1/2</sup>?'),'0,5<sup>1/3</sup>',['0,5<sup>1/2</sup>',L('они равны','олар тең'),L('сравнить нельзя','салыстыруға болмайды')],L('0 &lt; a &lt; 1: меньшему показателю соответствует большая степень.','0 &lt; a &lt; 1: кіші көрсеткішке үлкен дәреже сәйкес.')]];
+const GEN={root:()=>fromGen('root',['root','eq','out','in','book']),prop:()=>fromGen('prop',['prop','irr','cmp']),pow:()=>fromGen('pow',['pow','conv','simp']),th:()=>{const[q,a,w,ex]=pick(THQ());return mkQ('th',q,a,w,ex);}};
+const build=rec=>withSeed(rec.seed,()=>GEN[rec.cat==='all'?pick(Object.keys(GEN)):rec.cat]());
+
+function renderQ(box,q,chosen,{onAnswer,nextLabel,onNext}){
+  box.innerHTML=`<div class="qcard"><div class="qcat">${q.cat}</div><div class="qtext">${q.q}</div><div class="opts">${q.opts.map((o,i)=>`<button class="opt" data-o="${i}"><span class="k">${LET[i]}</span><span>${o}</span></button>`).join('')}</div><div class="fb"></div></div>`;
+  const btns=[...box.querySelectorAll('.opt')];
+  const showFb=(i,focus)=>{const ok=i===q.ans;btns.forEach(x=>{x.disabled=true;});btns[q.ans].classList.add('right');if(!ok)btns[i].classList.add('wrong');
+    const fb=box.querySelector('.fb');fb.innerHTML=`<div class="expl ${ok?'ok':'no'}"><b>${ok?L('Верно!','Дұрыс!'):L('Неверно. Правильный ответ: ','Қате. Дұрыс жауап: ')+LET[q.ans]}</b>${q.ex}</div>`;
+    const nb=document.createElement('button');nb.className='btn';nb.textContent=nextLabel();nb.style.marginTop='14px';nb.addEventListener('click',onNext);fb.appendChild(nb);if(focus)nb.focus({preventScroll:true});};
+  if(chosen!=null)showFb(chosen,false);
+  btns.forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.o;showFb(i,true);onAnswer(i===q.ans,i);}));
+}
+const T={cat:'all',done:0,ok:0,streak:0,best:0,rec:null,chosen:null};
+try{T.best=+localStorage.getItem('rtn-best')||0;}catch(e){}
+function renderTrCat(){const C_=[['all',L('Все темы','Барлық тақырыптар')],...Object.entries(CATN())];$('#trCat').innerHTML=C_.map(([k,l])=>`<button data-c="${k}" aria-pressed="${k===T.cat}">${l}</button>`).join('');}
+$('#trCat').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;T.cat=b.dataset.c;[...$('#trCat').children].forEach(x=>x.setAttribute('aria-pressed',x===b));nextTrain();});
+function stats(){$('#sDone').textContent=T.done;$('#sOk').textContent=T.ok;$('#sStreak').textContent=T.streak;$('#sBest').textContent=T.best;}
+function drawTrain(){renderQ($('#trBox'),build(T.rec),T.chosen,{nextLabel:()=>L('Следующее задание','Келесі тапсырма'),onNext:nextTrain,onAnswer:(ok,i)=>{T.chosen=i;T.done++;if(ok){T.ok++;T.streak++;if(T.streak>T.best){T.best=T.streak;try{localStorage.setItem('rtn-best',T.best);}catch(e){}}}else T.streak=0;stats();}});}
+function nextTrain(){T.rec={cat:T.cat,seed:newSeed()};T.chosen=null;drawTrain();}
+const TT={phase:'intro',recs:[],i:0,ok:0,chosen:[]};
+function drawTest(){if(TT.phase==='intro')testIntro();else if(TT.phase==='q')testStep();else testEnd();}
+function testIntro(){let best=null;try{best=localStorage.getItem('rtn-test');}catch(e){}
+  $('#testBox').innerHTML=`<div class="qcard"><h2>${L('Итоговый тест','Қорытынды тест')}</h2><p>${L('10 заданий: теория, вычисление корней и уравнение xⁿ = a, преобразования выражений с корнями, степень с рациональным показателем. После каждого ответа — разбор, в конце — итог и список ошибок.','10 тапсырма: теория, түбірлерді есептеу және xⁿ = a теңдеуі, түбірі бар өрнектерді түрлендіру, рационал көрсеткішті дәреже. Әр жауаптан кейін талдау, соңында қорытынды және қателер тізімі.')}</p>
+    ${best!==null?`<p class="stat">${L('Ваш лучший результат','Ең жақсы нәтижеңіз')}: <b>${best} / 10</b></p>`:''}<button class="btn" id="tStart">${L('Начать тест','Тестті бастау')}</button></div>`;
+  $('#tStart').addEventListener('click',startTest);}
+function startTest(){TT.recs=shuffle(['th','th','root','root','root','prop','prop','pow','pow','pow']).map(c=>({cat:c,seed:newSeed()}));TT.i=0;TT.ok=0;TT.chosen=[];TT.phase='q';testStep();}
+function testStep(){const q=build(TT.recs[TT.i]),box=$('#testBox'),ch=TT.chosen[TT.i];
+  box.innerHTML=`<div class="row" style="margin-bottom:10px"><span class="stat">${L('Задание','Тапсырма')} <b>${TT.i+1}</b> / 10</span><span class="stat">${L('Верно','Дұрыс')}: <b id="tOk">${TT.ok}</b></span></div><div class="progress" style="margin-bottom:16px"><i style="width:${(TT.i+(ch!=null?1:0))*10}%"></i></div><div id="tQ"></div>`;
+  renderQ($('#tQ'),q,ch,{nextLabel:()=>TT.i<9?L('Дальше','Әрі қарай'):L('Показать результат','Нәтижені көрсету'),onNext:()=>{TT.i++;if(TT.i<10)testStep();else{TT.phase='end';testEnd();}},
+    onAnswer:(ok,i)=>{TT.chosen[TT.i]=i;if(ok)TT.ok++;box.querySelector('.progress i').style.width=(TT.i+1)*10+'%';$('#tOk').textContent=TT.ok;}});}
+function testEnd(){const s=TT.ok;const msg=s>=9?L('Отлично! Тема усвоена.','Өте жақсы! Тақырып меңгерілді.'):s>=7?L('Хорошо. Повторите задания, где были ошибки.','Жақсы. Қате жіберген тапсырмаларды қайталаңыз.'):s>=5?L('Неплохо, но стоит потренироваться ещё.','Жаман емес, бірақ тағы жаттығу керек.'):L('Вернитесь к теории и модели, затем потренируйтесь ещё.','Теория мен модельге қайта оралып, сосын тағы жаттығыңыз.');
+  try{const prev=localStorage.getItem('rtn-test');if(prev===null||s>+prev)localStorage.setItem('rtn-test',s);}catch(e){}
+  const wrong=TT.recs.map((r,i)=>({q:build(r),c:TT.chosen[i]})).filter(x=>x.c!==x.q.ans);
+  $('#testBox').innerHTML=`<div class="qcard"><div class="qcat">${L('Результат','Нәтиже')}</div><div class="score">${s} <span style="font-size:1.4rem;color:var(--muted)">/ 10</span></div><p>${msg}</p>
+    ${wrong.length?`<h3>${L('Разбор ошибок','Қателерді талдау')}</h3><div class="review">${wrong.map(({q})=>`<div><span class="qcat">${q.cat}</span><span>${q.q}</span><span>${L('Ответ','Жауабы')}: ${q.opts[q.ans]}</span><span style="color:var(--muted)">${q.ex}</span></div>`).join('')}</div>`:''}
+    <div class="row"><button class="btn" id="tAgain">${L('Пройти ещё раз','Қайта тапсыру')}</button><button class="btn ghost" id="tTrain">${L('Перейти в тренажёр','Жаттықтырғышқа өту')}</button></div></div>`;
+  $('#tAgain').addEventListener('click',startTest);$('#tTrain').addEventListener('click',()=>showTab('train'));}
+
+
+
+
+
+/* ================= переключатели ================= */
+function renderAll(){applyUI();$('[data-i="m2sL"]').innerHTML=L('Показать y = xⁿ (симметрия относительно y = x)','y = xⁿ көрсету (y = x түзуіне қатысты симметрия)');renderTheory();drawModel();drawSolve();renderTrCat();stats();drawTrain();drawTest();}
+$('#langSw').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset.lang===LANG)return;LANG=b.dataset.lang;try{localStorage.setItem('rtn-lang',LANG);}catch(e){}renderAll();});
+function setSize(px){document.documentElement.style.fontSize=px+'px';[...$('#sizeSw').children].forEach(b=>b.setAttribute('aria-pressed',+b.dataset.sz===px));}
+$('#sizeSw').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const px=+b.dataset.sz;setSize(px);try{localStorage.setItem('rtn-size',px);}catch(e){}});
+(function(){let px=22;try{const v=+localStorage.getItem('rtn-size');if([16,22,28].includes(v))px=v;}catch(e){}setSize(px);})();
+const mq=matchMedia('(prefers-color-scheme: dark)');
+function syncTheme(){const t=document.documentElement.dataset.theme||(mq.matches?'dark':'light');[...$('#themeSw').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.th===t));}
+$('#themeSw').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;document.documentElement.dataset.theme=b.dataset.th;try{localStorage.setItem('rtn-theme',b.dataset.th);}catch(e){}syncTheme();});
+try{const t=localStorage.getItem('rtn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}
+mq.addEventListener('change',syncTheme);new MutationObserver(syncTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+S.seed=newSeed();T.rec={cat:'all',seed:newSeed()};
+renderAll();syncTheme();
+(function(){const h=location.hash.slice(1);let t=TABS.includes(h)?h:null;if(!t){try{const s=localStorage.getItem('rtn-tab');if(TABS.includes(s))t=s;}catch(e){}}showTab(t||'theory');})();
+
+</script>
+<style>
+#penCv{position:fixed;inset:0;width:100vw;height:100vh;z-index:900;pointer-events:none;touch-action:auto}
+#penCv.on{pointer-events:auto;touch-action:none;cursor:crosshair}
+#penCv.on.er{cursor:cell}
+#penCv.on.ln{cursor:copy}
+#penBar{position:fixed;right:18px;bottom:18px;z-index:901;display:flex;align-items:center;gap:6px;padding:8px;border-radius:40px;background:var(--surface);border:1px solid var(--line);box-shadow:0 6px 24px rgba(10,20,50,.18);font-family:'PT Sans',Arial,sans-serif}
+#penBar button{all:unset;box-sizing:border-box;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--ink);transition:background .15s}
+#penBar button:hover{background:var(--accent-soft)}
+#penBar button[aria-pressed="true"]{background:var(--accent-soft);box-shadow:inset 0 0 0 3px var(--accent)}
+#penBar button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#penBar svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#penBar .sw{width:30px;height:30px;border-radius:50%;border:2px solid rgba(0,0,0,.15)}
+#penBar .wd{background:var(--ink);border-radius:50%}
+#penBar .sep{width:1px;height:36px;background:var(--line);margin:0 4px}
+#penBar .tools{display:none;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+#penBar.open .tools{display:flex}
+#penMain{background:var(--accent)!important;color:#fff!important;width:62px!important;height:62px!important}
+#penBar.open #penMain{background:var(--c2,#c2410c)!important}
+@media (max-width:900px){#penBar{max-width:calc(100vw - 36px);border-radius:24px}#penBar button{width:46px;height:46px}}
+</style>
+<canvas id="penCv"></canvas>
+<div id="penBar">
+  <div class="tools">
+    <button data-pc="ink" class="pc"><span class="sw"></span></button>
+    <button data-pc="red" class="pc"><span class="sw"></span></button>
+    <button data-pc="blue" class="pc"><span class="sw"></span></button>
+    <button data-pc="green" class="pc"><span class="sw"></span></button>
+    <button data-pc="orange" class="pc"><span class="sw"></span></button>
+    <button data-pc="violet" class="pc"><span class="sw"></span></button>
+    <span class="sep"></span>
+    <button data-pw="3" class="pw"><span class="wd" style="width:6px;height:6px"></span></button>
+    <button data-pw="6" class="pw"><span class="wd" style="width:11px;height:11px"></span></button>
+    <button data-pw="12" class="pw"><span class="wd" style="width:18px;height:18px"></span></button>
+    <span class="sep"></span>
+    <button id="penCirc"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 12h8"/></svg></button>
+    <button id="penLine"><svg viewBox="0 0 24 24"><path d="M4 20 20 4"/><circle cx="4" cy="20" r="1.8" fill="currentColor"/><circle cx="20" cy="4" r="1.8" fill="currentColor"/></svg></button>
+    <button id="penEr"><svg viewBox="0 0 24 24"><path d="M7 21h12"/><path d="M5.5 15.5 14 7l5 5-8.5 8.5H7.5z"/><path d="M9.5 11.5l5 5"/></svg></button>
+    <button id="penUndo"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button id="penClr"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+    <span class="sep"></span>
+  </div>
+  <button id="penMain" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M15 4l5 5L9 20H4v-5z"/><path d="M13 6l5 5"/></svg></button>
+</div>
+<script>
+(function(){
+  const cv=document.getElementById('penCv'),bar=document.getElementById('penBar'),ctx=cv.getContext('2d');
+  const LNG=()=>(typeof LANG!=='undefined'&&LANG==='kz')?1:0;
+  const TIP={penMain:['Ручка: рисовать на экране (Esc — выключить)','Қалам: экранға жазу (Esc — өшіру)'],penEr:['Ластик','Өшіргіш'],penLine:['Прямая линия (линейка): потяните от начала к концу','Түзу сызық (сызғыш): басынан соңына дейін тартыңыз'],penCirc:['Окружность (циркуль): нажмите в центре и потяните до нужного радиуса','Шеңбер (циркуль): центрін басып, қажетті радиусқа дейін тартыңыз'],penUndo:['Отменить последнее','Соңғысын болдырмау'],penClr:['Стереть всё на этой вкладке','Осы беттегінің бәрін өшіру'],
+    ink:['Чёрный','Қара'],red:['Красный','Қызыл'],blue:['Синий','Көк'],green:['Зелёный','Жасыл'],orange:['Оранжевый','Қызғылт сары'],violet:['Фиолетовый','Күлгін'],w3:['Тонкая линия','Жіңішке сызық'],w6:['Средняя линия','Орташа сызық'],w12:['Толстая линия','Жуан сызық']};
+  const COL={ink:['#1c2746','#f1f4fb'],red:['#dc2626','#ff6b6b'],blue:['#2563eb','#7aa2ff'],green:['#15803d','#4ade80'],orange:['#ea580c','#fb923c'],violet:['#7c3aed','#c4a5ff']};
+  const mqD=matchMedia('(prefers-color-scheme: dark)');
+  const dark=()=>{const t=document.documentElement.dataset.theme;return t?t==='dark':mqD.matches;};
+  const st={on:false,color:'red',w:6,er:false,tool:null,pages:{},cleared:{},cur:null};
+  const key=()=>{const t=document.querySelector('[role="tab"][aria-selected="true"]');return t?(t.id||t.dataset.tab||t.textContent):'main';};
+  const list=()=>st.pages[key()]||(st.pages[key()]=[]);
+  let dpr=1;
+  function size(){dpr=Math.min(window.devicePixelRatio||1,2);cv.width=Math.round(innerWidth*dpr);cv.height=Math.round(innerHeight*dpr);redraw();}
+  function stroke(s){if(s.p.length===0)return;ctx.save();ctx.globalCompositeOperation=s.er?'destination-out':'source-over';
+    ctx.strokeStyle=s.er?'#000':COL[s.c][dark()?1:0];ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=s.w;ctx.lineCap='round';ctx.lineJoin='round';
+    const ox=scrollX,oy=scrollY,p=s.p;
+    if(s.ci){const r=p.length>1?Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]):0;ctx.beginPath();ctx.arc(p[0][0]-ox,p[0][1]-oy,Math.max(r,1),0,2*Math.PI);ctx.stroke();ctx.beginPath();ctx.arc(p[0][0]-ox,p[0][1]-oy,Math.max(2,s.w/2),0,7);ctx.fill();
+      if(s===st.cur&&p.length>1){ctx.setLineDash([6,6]);ctx.lineWidth=Math.max(1.5,s.w/3);ctx.beginPath();ctx.moveTo(p[0][0]-ox,p[0][1]-oy);ctx.lineTo(p[1][0]-ox,p[1][1]-oy);ctx.stroke();}ctx.restore();return;}
+    if(p.length===1){ctx.beginPath();ctx.arc(p[0][0]-ox,p[0][1]-oy,s.w/2,0,7);ctx.fill();}
+    else{ctx.beginPath();ctx.moveTo(p[0][0]-ox,p[0][1]-oy);for(let i=1;i<p.length-1;i++){const mx=(p[i][0]+p[i+1][0])/2,my=(p[i][1]+p[i+1][1])/2;ctx.quadraticCurveTo(p[i][0]-ox,p[i][1]-oy,mx-ox,my-oy);}
+      const l=p[p.length-1];ctx.lineTo(l[0]-ox,l[1]-oy);ctx.stroke();}
+    ctx.restore();}
+  function redraw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,innerWidth,innerHeight);list().forEach(stroke);if(st.cur)stroke(st.cur);}
+  function tips(){const l=LNG();bar.querySelectorAll('button').forEach(b=>{const k=b.id||(b.dataset.pc)||('w'+b.dataset.pw);const t=TIP[k];if(t){b.title=t[l];b.setAttribute('aria-label',t[l]);}});}
+  function ui(){bar.classList.toggle('open',st.on);cv.classList.toggle('on',st.on);cv.classList.toggle('er',st.er);
+    document.getElementById('penMain').setAttribute('aria-pressed',st.on);
+    bar.querySelectorAll('.pc').forEach(b=>{b.setAttribute('aria-pressed',!st.er&&b.dataset.pc===st.color);b.firstElementChild.style.background=COL[b.dataset.pc][dark()?1:0];});
+    bar.querySelectorAll('.pw').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.pw===st.w));
+    document.getElementById('penEr').setAttribute('aria-pressed',st.er);document.getElementById('penLine').setAttribute('aria-pressed',st.tool==='line'&&!st.er);document.getElementById('penCirc').setAttribute('aria-pressed',st.tool==='circ'&&!st.er);cv.classList.toggle('ln',!!st.tool&&!st.er);tips();}
+  bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+    if(b.id==='penMain'){st.on=!st.on;}
+    else if(b.dataset.pc){st.color=b.dataset.pc;st.er=false;}
+    else if(b.dataset.pw){st.w=+b.dataset.pw;}
+    else if(b.id==='penEr'){st.er=!st.er;}
+    else if(b.id==='penLine'){st.tool=(st.tool==='line'&&!st.er)?null:'line';st.er=false;}
+    else if(b.id==='penCirc'){st.tool=(st.tool==='circ'&&!st.er)?null:'circ';st.er=false;}
+    else if(b.id==='penUndo'){const L_=list();if(L_.length)L_.pop();else if(st.cleared[key()]){st.pages[key()]=st.cleared[key()];delete st.cleared[key()];}redraw();}
+    else if(b.id==='penClr'){if(list().length){st.cleared[key()]=list();st.pages[key()]=[];}redraw();}
+    ui();});
+  function pt(e){return[e.clientX+scrollX,e.clientY+scrollY];}
+  cv.addEventListener('pointerdown',e=>{if(!st.on)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){}
+    const er=st.er||e.button===5||(e.buttons&32);
+    st.cur={c:st.color,w:er?Math.max(30,st.w*4):st.w,er,ln:st.tool==='line'&&!er,ci:st.tool==='circ'&&!er,p:[pt(e)]};delete st.cleared[key()];redraw();});
+  cv.addEventListener('pointermove',e=>{if(!st.cur)return;if(st.cur.ci){st.cur.p=[st.cur.p[0],pt(e)];redraw();return;}if(st.cur.ln){const a=st.cur.p[0];let[b0,b1]=pt(e);const dx=b0-a[0],dy=b1-a[1],L=Math.hypot(dx,dy);if(L>0){const ang=Math.atan2(dy,dx),sn=Math.round(ang/(Math.PI/4))*(Math.PI/4);if(Math.abs(ang-sn)<0.07){b0=a[0]+L*Math.cos(sn);b1=a[1]+L*Math.sin(sn);}}st.cur.p=[a,[b0,b1]];redraw();return;}const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];(evs.length?evs:[e]).forEach(ev=>st.cur.p.push(pt(ev)));redraw();});
+  const end=()=>{if(!st.cur)return;list().push(st.cur);st.cur=null;redraw();};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);cv.addEventListener('lostpointercapture',end);
+  addEventListener('scroll',redraw,{passive:true});addEventListener('resize',size);
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&st.on){st.on=false;ui();}});
+  new MutationObserver(()=>{redraw();ui();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang']});
+  mqD.addEventListener('change',()=>{redraw();ui();});
+  document.querySelectorAll('[role="tab"]').forEach(t=>new MutationObserver(redraw).observe(t,{attributes:true,attributeFilter:['aria-selected']}));
+  document.addEventListener('click',e=>{if(e.target.closest('#langSw,[data-lang]'))setTimeout(tips,0);});
+  size();ui();
+})();
+</script>
+</html>
